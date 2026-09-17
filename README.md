@@ -13,6 +13,8 @@ maker* is already in the tool.
   due in 7 days, USD) and watch a live preview build beside it
 - Exact money arithmetic — tax, discounts, shipping, part payment, multi-currency
 - Three professional templates, plus a logo, one accent colour and a typeface
+- **Fit to one page** — scales type, margins and row spacing together until the
+  invoice lands on a single sheet, and says so plainly when it cannot
 - Download a real PDF with selectable text, or print the invoice alone
 - Remembers your business details and recent invoices, on your device only
 - Share by link without an account, or hand off the PDF through the native
@@ -28,16 +30,19 @@ npm run dev          # http://localhost:3000
 ## Verifying it
 
 ```bash
-npm run verify       # types, lint, 102 unit tests, production build
+npm run verify       # types, lint, 111 unit tests, production build
 
 # End-to-end, against a real browser (one-time: npx playwright install chromium)
 npm run build && npm start -- -p 3210
-npm run e2e          # 95 checks: flows, PDF, touch targets, a11y, print, dark mode
+npm run e2e          # 107 checks: flows, PDF page counts, fit-to-page, touch
+                     # targets, WCAG contrast, print, dark mode
 ```
 
 `npm test` includes PDF assertions that render the document in Node and read the
-bytes back with pdf.js, so page counts, repeated table headers and text
-selectability are checked against the delivered file rather than the components.
+bytes back with pdf.js, so page counts, repeated table headers, the embedded
+font and text selectability are checked against the delivered file rather than
+the components. The browser suite goes further and counts the pages of PDFs it
+actually downloads.
 
 ## Deploying to Vercel
 
@@ -77,7 +82,8 @@ selectability are checked against the delivered file rather than the components.
 | Model | [src/lib/invoice.ts](src/lib/invoice.ts) | Amounts kept as typed strings so editing is lossless; versioned for migration. |
 | Templates | [src/lib/templates.ts](src/lib/templates.ts) | One spec, in points, read by both renderers. |
 | Preview | [src/components/preview/](src/components/preview/) | HTML at true page size, scaled by transform, so it is a scale model rather than a lookalike. |
-| PDF | [src/components/pdf/](src/components/pdf/) | Built in the browser. Uses the PDF's own built-in fonts, so there are no font files to ship. |
+| PDF | [src/components/pdf/](src/components/pdf/) | Built in the browser, embedding the same font files the preview paints with. |
+| Fonts | [src/lib/fonts.ts](src/lib/fonts.ts) | One registry for both renderers, including each face's measured line height. |
 | Storage | [src/lib/storage.ts](src/lib/storage.ts) | `localStorage` only, defensive against private mode and quota. |
 | Sharing | [src/lib/share.ts](src/lib/share.ts) | Deflated payload in the URL fragment, which browsers never send to a server. |
 | Landing pages | [src/lib/seo-pages.ts](src/lib/seo-pages.ts) | A registry, so new pages are data — added only where there is something to say. |
@@ -89,16 +95,26 @@ There is no server that receives an invoice, which is why there is no privacy
 banner to dismiss and no per-invoice cost to recover with a paywall.
 
 **The preview is HTML, the download is a PDF.** Two renderers would normally
-drift apart, so both read their geometry and type scale from the single template
-spec. Two constraints are encoded there and easy to break by accident:
+drift apart, so both read their geometry and type scale from one template spec
+and their typeface from one font registry. Three constraints are encoded there,
+each found by generating a PDF and reading the bytes back, and each now covered
+by a test:
 
-- Letter spacing above ~0.8pt at label sizes makes a PDF reader emit each glyph
-  separately, so copying `DESCRIPTION` out of the file yields `D E S C R I P T I O N`.
-- `lineHeight` must not sit on the react-pdf `Page`; the absolutely positioned
-  page-number node inherits it and stops drawing.
-
-Both are covered by tests in
-[src/components/pdf/InvoiceDocument.test.tsx](src/components/pdf/InvoiceDocument.test.tsx).
+- **Never set `lineHeight` on a react-pdf `View` or `Text`.** It is treated as
+  an absolute measure — the same value yields identical spacing at 7pt and at
+  26pt — and roughly doubles the intended leading. Setting it on the `Page`
+  spaces correctly but stops absolutely-positioned `fixed` nodes, such as the
+  page number, from drawing at all. The fix is to set it nowhere and let each
+  face's intrinsic leading apply, which is proportional and correct; the
+  preview mirrors that value as its CSS `line-height`, which is what keeps a
+  one-page preview a one-page PDF.
+- **Express letter spacing as a fraction of font size.** Past roughly `0.09em`
+  a PDF reader emits one glyph at a time, so copying `DESCRIPTION` out of the
+  file yields `D E S C R I P T I O N` and accounting software parses it the
+  same way. A fixed point value crosses that threshold the moment "Fit to one
+  page" shrinks the type.
+- **Fonts must be registered before the first render**, and the source differs
+  by environment: a URL in the browser, a filesystem path in the tests.
 
 ### Adding accounts later
 
@@ -109,9 +125,18 @@ functions rather than a rewrite.
 
 ## Design system
 
-Generated and stored under [design-system/](design-system/): Swiss/minimal, Inter,
-an 8px rhythm, one accent colour, hairline borders, WCAG AA contrast in both
-themes. `design-system/invoice-maker/MASTER.md` is the source of truth.
+Generated and stored under [design-system/](design-system/): Swiss/minimal, an
+8px rhythm, hairline borders and one accent colour. The palette is navy and
+slate with a single green reserved for "paid" — the colours of a document a
+business sends, rather than plain black on white. Every text/background pair is
+checked against WCAG AA in both themes by the browser suite, not by eye.
+
+Typography is Inter for the interface, and Inter, Source Serif 4 or JetBrains
+Mono for the invoice itself. Those files live in [public/fonts/](public/fonts/)
+and are shared by the preview and the PDF; only the face actually chosen is
+ever downloaded, and Sans reuses the interface font rather than a second copy.
+
+`design-system/invoice-maker/MASTER.md` is the source of truth.
 
 ## Licence
 

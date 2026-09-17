@@ -30,6 +30,27 @@ function check(name, ok, detail = '') {
 
 mkdirSync(OUT, { recursive: true });
 
+/** Page count and text of a downloaded PDF, read with pdf.js. */
+async function loadPdf(path) {
+  const pdfjs = await import('pdfjs-dist/legacy/build/pdf.mjs');
+  const { readFileSync } = await import('node:fs');
+  return pdfjs.getDocument({ data: new Uint8Array(readFileSync(path)), useSystemFonts: true }).promise;
+}
+
+async function pageCount(path) {
+  return (await loadPdf(path)).numPages;
+}
+
+async function pdfText(path) {
+  const doc = await loadPdf(path);
+  let out = '';
+  for (let n = 1; n <= doc.numPages; n += 1) {
+    const content = await (await doc.getPage(n)).getTextContent();
+    out += `${content.items.map((i) => ('str' in i ? i.str : '')).join(' ')}\n`;
+  }
+  return out.replace(/\s+/g, ' ');
+}
+
 const browser = await chromium.launch();
 
 // ---------------------------------------------------------------- desktop
@@ -143,6 +164,10 @@ const browser = await chromium.launch();
   const path = `${OUT}/downloaded.pdf`;
   await download.saveAs(path);
   check('downloaded file is non-trivial', statSync(path).size > 1000);
+  const { readFileSync } = await import('node:fs');
+  const fontNames = readFileSync(path).toString('latin1').match(/\/BaseFont\s*\/[A-Za-z0-9+\-_,]+/g)?.join(' ') ?? '';
+  check('download embeds the app font, not a PDF fallback',
+    fontNames.includes('Inter') && !/Helvetica|Times-Roman/.test(fontNames), fontNames.slice(0, 90));
   await page.waitForTimeout(400);
   check('download shows a confirmation',
     (await page.getByText('Invoice downloaded').count()) > 0);
@@ -291,9 +316,145 @@ const browser = await chromium.launch();
   const size = statSync(`${OUT}/large.pdf`).size;
   check('100-line invoice downloads', size > 5000, `${Math.round(size / 1024)}KB`);
 
+  const manyPages = await pageCount(`${OUT}/large.pdf`);
+  check('100-line invoice spans several pages', manyPages > 1, `${manyPages} pages`);
+
+  // Fit to one page.
+  //
+  // Two cases, because the control has a deliberate floor: a realistically
+  // long invoice must actually reach one page, and an extreme one must say
+  // plainly that it could not rather than shrinking into illegibility.
+  await page.getByRole('switch', { name: 'Fit to one page' }).click();
+  await page.waitForTimeout(900);
+
+  const extremeLabel = await page
+    .locator('p', { hasText: /scaled to \d+%/i })
+    .first()
+    .innerText()
+    .catch(() => '');
+  check('fit control reports the scale it applied', /\d+%/.test(extremeLabel), extremeLabel.slice(0, 70));
+  check('fit control admits when 100 lines will still not fit',
+    /may still run over/i.test(extremeLabel), extremeLabel.slice(0, 90));
+
+  const extremeDownload = page.waitForEvent('download', { timeout: 60000 });
+  await page.getByRole('button', { name: 'Download PDF' }).click();
+  const ed = await extremeDownload;
+  await ed.saveAs(`${OUT}/fitted-extreme.pdf`);
+  const extremePages = await pageCount(`${OUT}/fitted-extreme.pdf`);
+  check('fit still reduces an over-long invoice', extremePages < manyPages,
+    `${manyPages} -> ${extremePages} pages`);
+
+  // Now a length that genuinely should collapse to a single page.
+  await page.evaluate(() => {
+    const raw = window.localStorage.getItem('im.draft.v1');
+    if (!raw) return;
+    const draft = JSON.parse(raw);
+    draft.items = Array.from({ length: 26 }, (_, i) => ({
+      id: `fit-${i}`,
+      description: `Consulting session ${i + 1}`,
+      quantity: '1',
+      unitPrice: '250',
+      tax: { mode: 'percent', value: '' },
+      discount: { mode: 'percent', value: '' },
+    }));
+    draft.options.fitToPage = false;
+    window.localStorage.setItem('im.draft.v1', JSON.stringify(draft));
+  });
+  await page.reload({ waitUntil: 'networkidle' });
+  await page.waitForTimeout(700);
+
+  const spillDownload = page.waitForEvent('download', { timeout: 60000 });
+  await page.getByRole('button', { name: 'Download PDF' }).click();
+  await (await spillDownload).saveAs(`${OUT}/spilling.pdf`);
+  const spillPages = await pageCount(`${OUT}/spilling.pdf`);
+  check('a 26-line invoice needs two pages unaided', spillPages > 1, `${spillPages} pages`);
+
+  await page.getByRole('switch', { name: 'Fit to one page' }).click();
+  await page.waitForTimeout(900);
+  const fitDownload = page.waitForEvent('download', { timeout: 60000 });
+  await page.getByRole('button', { name: 'Download PDF' }).click();
+  await (await fitDownload).saveAs(`${OUT}/fitted.pdf`);
+  const fittedPages = await pageCount(`${OUT}/fitted.pdf`);
+  check('fit to one page collapses it to a single page', fittedPages === 1, `${fittedPages} pages`);
+
+  const fittedText = await pdfText(`${OUT}/fitted.pdf`);
+  check('fitted PDF keeps every line', fittedText.includes('Consulting session 26'));
+  check('fitted PDF keeps the totals', fittedText.includes('TOTAL DUE'));
+  check('fitted PDF text is still extractable', fittedText.includes('DESCRIPTION'),
+    fittedText.slice(0, 50));
+
   check('no console errors on the editor', errors.length === 0, errors.join(' | ').slice(0, 200));
 
   await page.screenshot({ path: `${OUT}/desktop.png`, fullPage: false });
+  await context.close();
+}
+
+// --------------------------------------------------------------- contrast
+for (const scheme of ['light', 'dark']) {
+  const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, colorScheme: scheme });
+  const page = await context.newPage();
+  await page.goto(BASE, { waitUntil: 'networkidle' });
+  await page.waitForTimeout(500);
+
+  const failures = await page.evaluate(() => {
+    const parse = (c) => {
+      const m = c.match(/rgba?\(([^)]+)\)/);
+      if (!m) return null;
+      const [r, g, b, a] = m[1].split(',').map((v) => Number.parseFloat(v));
+      return { r, g, b, a: a === undefined ? 1 : a };
+    };
+    const lum = ({ r, g, b }) =>
+      [r, g, b]
+        .map((v) => v / 255)
+        .map((v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4))
+        .reduce((acc, v, i) => acc + v * [0.2126, 0.7152, 0.0722][i], 0);
+    const ratio = (a, b) => {
+      const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p);
+      return (x + 0.05) / (y + 0.05);
+    };
+    // Walk up for the first opaque background actually painted behind an element.
+    const bgOf = (el) => {
+      let node = el;
+      while (node && node !== document.documentElement) {
+        const c = parse(getComputedStyle(node).backgroundColor);
+        if (c && c.a > 0.85) return c;
+        node = node.parentElement;
+      }
+      return parse(getComputedStyle(document.body).backgroundColor) ?? { r: 255, g: 255, b: 255, a: 1 };
+    };
+
+    const bad = [];
+    const seen = new Set();
+    document.querySelectorAll('p, span, label, a, button, h1, h2, h3, td, th, li, output').forEach((el) => {
+      // The invoice sheet is a white document in every theme; it is checked
+      // separately against its own paper, not the app's background.
+      if (el.closest('article.sheet')) return;
+      const text = (el.textContent ?? '').trim();
+      if (!text || el.children.length > 0) return;
+      const style = getComputedStyle(el);
+      if (style.visibility === 'hidden' || style.display === 'none') return;
+      const rect = el.getBoundingClientRect();
+      if (rect.width < 2 || rect.height < 2) return;
+
+      const fg = parse(style.color);
+      if (!fg || fg.a < 0.5) return;
+      const r = ratio(fg, bgOf(el));
+      const size = Number.parseFloat(style.fontSize);
+      const weight = Number.parseInt(style.fontWeight, 10) || 400;
+      // WCAG AA: 3:1 for large text (>=18.66px bold or >=24px), else 4.5:1.
+      const large = size >= 24 || (size >= 18.66 && weight >= 700);
+      const required = large ? 3 : 4.5;
+      if (r < required) {
+        const key = `${style.color}|${Math.round(size)}`;
+        if (seen.has(key)) return;
+        seen.add(key);
+        bad.push(`"${text.slice(0, 22)}" ${r.toFixed(2)}:1 < ${required} (${Math.round(size)}px/${weight})`);
+      }
+    });
+    return bad;
+  });
+
+  check(`${scheme}: text meets WCAG AA contrast`, failures.length === 0, failures.join(' | ').slice(0, 260));
   await context.close();
 }
 

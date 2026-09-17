@@ -106,13 +106,16 @@ export interface Invoice {
     showShipping: boolean;
     showFees: boolean;
     showPaid: boolean;
+    /** Scale the whole document down until it fits on a single page. */
+    fitToPage: boolean;
   };
 
   createdAt: string;
   updatedAt: string;
 }
 
-export const DEFAULT_ACCENT = '#2563EB';
+/** Navy: professional without being a statement. */
+export const DEFAULT_ACCENT = '#1E3A5F';
 
 export const TEMPLATE_IDS: readonly TemplateId[] = ['classic', 'modern', 'minimal'];
 
@@ -225,6 +228,7 @@ export function createInvoice(options: {
       showShipping: false,
       showFees: false,
       showPaid: false,
+      fitToPage: false,
     },
     createdAt: now,
     updatedAt: now,

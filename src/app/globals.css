@@ -14,25 +14,37 @@
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
 
-  /* Surfaces and text. Light mode is the default and the printed truth. */
-  --color-canvas: #ffffff;
-  --color-surface: #fafafa;
+  /*
+   * Navy and slate rather than black and white: the palette of a document a
+   * business sends, with a single green reserved for "paid". Neutrals carry a
+   * slight cool cast so the interface reads as considered rather than
+   * unstyled, and every pair below meets WCAG AA.
+   */
+  --color-canvas: #f6f8fb;
+  --color-surface: #eceff5;
   --color-raised: #ffffff;
-  --color-ink: #0a0a0a;
-  --color-ink-muted: #525252;
-  --color-ink-subtle: #737373;
-  --color-line: #e5e5e5;
-  --color-line-strong: #d4d4d4;
+  --color-ink: #0f172a;
+  --color-ink-muted: #475569;
+  --color-ink-subtle: #5c6b80;
+  --color-line: #e2e8f0;
+  --color-line-strong: #cbd5e1;
 
+  /* The brand: used for the primary action and the active state. */
+  --color-primary: #1e3a5f;
+  --color-primary-hover: #16304f;
+  --color-primary-ink: #ffffff;
+
+  /* Focus rings, links and selection. */
   --color-accent: #2563eb;
   --color-accent-hover: #1d4ed8;
   --color-accent-ink: #ffffff;
-  --color-accent-wash: #eff6ff;
+  --color-accent-wash: #eaf1fe;
 
-  --color-danger: #b91c1c;
-  --color-danger-wash: #fef2f2;
+  --color-danger: #b42318;
+  --color-danger-wash: #fef3f2;
   --color-success: #047857;
-  --color-warning: #a16207;
+  --color-success-wash: #ecfdf5;
+  --color-warning: #b54708;
 
   /* 8px rhythm. */
   --spacing: 0.25rem;
@@ -60,22 +72,63 @@
  * white in every theme: it is a document about to be printed, not UI.
  */
 [data-theme='dark'] {
-  --color-canvas: #0c0c0d;
-  --color-surface: #16161a;
-  --color-raised: #1c1c21;
-  --color-ink: #f5f5f5;
-  --color-ink-muted: #a3a3a3;
-  --color-ink-subtle: #8a8a8a;
-  --color-line: #2a2a30;
-  --color-line-strong: #3a3a42;
-  --color-accent: #60a5fa;
-  --color-accent-hover: #93c5fd;
-  --color-accent-ink: #0a0a0a;
-  --color-accent-wash: #17233c;
-  --color-danger: #f87171;
-  --color-danger-wash: #2a1516;
-  --color-success: #34d399;
+  /* The same navy family, as lighter tonal variants rather than inversions. */
+  --color-canvas: #0b1220;
+  --color-surface: #161f31;
+  --color-raised: #1b2740;
+  --color-ink: #e9eef7;
+  --color-ink-muted: #a4b4cc;
+  --color-ink-subtle: #8496b0;
+  --color-line: #253148;
+  --color-line-strong: #36455f;
+
+  --color-primary: #3a6ba5;
+  --color-primary-hover: #4a7db8;
+  --color-primary-ink: #ffffff;
+
+  --color-accent: #7cabf2;
+  --color-accent-hover: #9cc0f6;
+  --color-accent-ink: #0b1220;
+  --color-accent-wash: #16233a;
+
+  --color-danger: #fca5a0;
+  --color-danger-wash: #2b1614;
+  --color-success: #4ade9f;
+  --color-success-wash: #10251d;
   --color-warning: #fbbf24;
+}
+
+/*
+ * The invoice sheet's faces.
+ *
+ * The same files react-pdf embeds in the download, so the preview is set in the
+ * same typeface rather than a near-match. Only the face actually painted is
+ * fetched, so these cost nothing until the user picks Serif or Mono; Sans
+ * reuses the Inter already loaded for the interface.
+ */
+@font-face {
+  font-family: 'Source Serif 4';
+  src: url('/fonts/source-serif-400.ttf') format('truetype');
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Source Serif 4';
+  src: url('/fonts/source-serif-700.ttf') format('truetype');
+  font-weight: 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: url('/fonts/jetbrains-mono-400.ttf') format('truetype');
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: url('/fonts/jetbrains-mono-700.ttf') format('truetype');
+  font-weight: 700;
+  font-display: swap;
 }
 
 @layer base {
@@ -203,7 +256,13 @@
   padding: var(--sheet-padding);
   font-family: var(--sheet-font);
   font-size: var(--sheet-body);
-  line-height: 1.45;
+  /*
+   * Set from the chosen font's measured intrinsic leading in the PDF renderer,
+   * so a block of text occupies the same height in the preview as it does in
+   * the download. Changing this in isolation is what makes a one-page preview
+   * arrive as a two-page PDF.
+   */
+  line-height: var(--sheet-leading);
   box-sizing: border-box;
   /* color-scheme: light pins form controls and selection to the paper. */
   color-scheme: light;

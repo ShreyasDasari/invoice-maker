@@ -44,11 +44,20 @@ interface ActionContext {
   totals: InvoiceTotals;
   locale: string;
   dateStyle: DateFormatId;
+  /** The shrink factor measured by the preview, for "Fit to one page". */
+  fitScale: number;
   /** Records the invoice as finished, for the recent list. */
   onCommit: () => void;
 }
 
-export function useInvoiceActions({ invoice, totals, locale, dateStyle, onCommit }: ActionContext) {
+export function useInvoiceActions({
+  invoice,
+  totals,
+  locale,
+  dateStyle,
+  fitScale,
+  onCommit,
+}: ActionContext) {
   const toast = useToast();
   const [downloading, setDownloading] = useState(false);
   const [sharing, setSharing] = useState(false);
@@ -62,7 +71,13 @@ export function useInvoiceActions({ invoice, totals, locale, dateStyle, onCommit
     ]);
 
     const render = pdf(
-      <InvoiceDocument invoice={invoice} totals={totals} locale={locale} dateStyle={dateStyle} />,
+      <InvoiceDocument
+        invoice={invoice}
+        totals={totals}
+        locale={locale}
+        dateStyle={dateStyle}
+        fitScale={fitScale}
+      />,
     ).toBlob();
 
     // The renderer loads a WebAssembly layout engine. If the environment
@@ -75,7 +90,7 @@ export function useInvoiceActions({ invoice, totals, locale, dateStyle, onCommit
         window.setTimeout(() => reject(new Error('PDF render timed out')), PDF_TIMEOUT_MS);
       }),
     ]);
-  }, [invoice, totals, locale, dateStyle]);
+  }, [invoice, totals, locale, dateStyle, fitScale]);
 
   const download = useCallback(async () => {
     if (inFlight.current) return;

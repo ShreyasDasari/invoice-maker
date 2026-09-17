@@ -98,7 +98,7 @@ export function RecentInvoices() {
           </div>
           <Link
             href="/"
-            className="mt-1 inline-flex h-9 items-center rounded-md bg-ink px-3.5 text-[13px] font-medium text-canvas transition-colors hover:bg-ink-muted"
+            className="mt-1 inline-flex h-9 items-center rounded-md bg-primary px-3.5 text-[13px] font-medium text-primary-ink transition-colors hover:bg-primary-hover"
           >
             {t.nav.create}
           </Link>

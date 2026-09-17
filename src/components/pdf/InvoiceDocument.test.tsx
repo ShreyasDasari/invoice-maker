@@ -9,6 +9,7 @@ import {
   type LineItem,
   type TemplateId,
 } from '@/lib/invoice';
+import { MIN_FIT_SCALE } from '@/lib/templates';
 
 /**
  * PDF verification.
@@ -33,12 +34,20 @@ interface Extracted {
   pages: string[];
   text: string;
   bytes: number;
+  /** PostScript names of the faces actually embedded in the file. */
+  fontNames: string;
 }
 
-async function renderAndRead(invoice: Invoice): Promise<Extracted> {
+async function renderAndRead(invoice: Invoice, fitScale = 1): Promise<Extracted> {
   const totals = computeTotals(invoice);
   const buffer = await renderToBuffer(
-    <InvoiceDocument invoice={invoice} totals={totals} locale="en-US" dateStyle="iso" />,
+    <InvoiceDocument
+      invoice={invoice}
+      totals={totals}
+      locale="en-US"
+      dateStyle="iso"
+      fitScale={fitScale}
+    />,
   );
 
   const doc = await pdfjs.getDocument({
@@ -59,7 +68,16 @@ async function renderAndRead(invoice: Invoice): Promise<Extracted> {
     );
   }
 
-  return { pageCount: doc.numPages, pages, text: pages.join('\n'), bytes: buffer.length };
+  // Font names live in the FontDescriptor, which is plain text in the file.
+  const fontNames = buffer.toString('latin1').match(/\/BaseFont\s*\/[A-Za-z0-9+\-_,]+/g)?.join(' ') ?? '';
+
+  return {
+    pageCount: doc.numPages,
+    pages,
+    text: pages.join('\n'),
+    bytes: buffer.length,
+    fontNames,
+  };
 }
 
 function build(items: Partial<LineItem>[], overrides: Partial<Invoice> = {}): Invoice {
@@ -180,13 +198,27 @@ describe('PDF output', () => {
     }
   });
 
-  it('renders each font choice', async () => {
+  it('embeds the font the user chose, rather than a substitute', async () => {
+    const expected: Record<string, string> = {
+      sans: 'Inter',
+      serif: 'SourceSerif',
+      mono: 'JetBrainsMono',
+    };
+
     for (const fontStyle of ['sans', 'serif', 'mono'] as const) {
       const base = createInvoice({ today: '2026-03-09' });
-      const { text } = await renderAndRead(
+      const { text, fontNames } = await renderAndRead(
         build(ONE_ITEM, { branding: { ...base.branding, fontStyle } }),
       );
       expect(text, `${fontStyle} text extraction`).toContain('Brand identity design');
+      expect(fontNames, `${fontStyle} should embed ${expected[fontStyle]}`).toContain(
+        expected[fontStyle]!,
+      );
+      // The standard-14 fallbacks must not appear: their presence would mean
+      // the chosen face failed to load and the renderer substituted one.
+      expect(fontNames, `${fontStyle} must not fall back`).not.toMatch(
+        /Helvetica|Times-Roman|Courier(?!New)/,
+      );
     }
   });
 
@@ -235,6 +267,7 @@ describe('PDF output', () => {
             showShipping: true,
             showFees: true,
             showPaid: true,
+            fitToPage: false,
           },
         },
       ),
@@ -255,6 +288,108 @@ describe('PDF output', () => {
     );
     expect(text).toContain('150,000');
     expect(text).not.toContain('150,000.00');
+  });
+
+  it('keeps a realistic single-invoice job on one page', async () => {
+    // Modelled on a real reported invoice: full addresses on both sides, tax
+    // IDs, three line items, every total row, notes and terms. This spilled
+    // onto a second page when the renderer was given an inflated line height.
+    const base = createInvoice({ today: '2026-09-17' });
+    const invoice: Invoice = {
+      ...base,
+      invoiceNumber: 'INV-1989898',
+      poNumber: 'PO-988988',
+      business: {
+        ...base.business,
+        name: 'PTC Inc.',
+        address: '2103 Seaport Ave,\nBoston, MA\n02119',
+        email: 'sdasari@ptc.com',
+        phone: '+17980989800',
+        website: 'ptc.com',
+        taxId: '68799889',
+      },
+      customer: {
+        ...base.customer,
+        name: 'Abhishek Lonkar',
+        address: 'Kumbh puja, Gangapur road,\nNashik-83898, India',
+        email: 'abhishek0099@gmail.com',
+        phone: '+91 9879898989',
+        taxId: '768998909',
+      },
+      items: [
+        createLineItem({ description: 'Tshirt jujutsu kaisen', quantity: '1', unitPrice: '10', tax: { mode: 'percent', value: '18' } }),
+        createLineItem({ description: 'Tshirt Naruto', quantity: '2', unitPrice: '25', tax: { mode: 'percent', value: '18' }, discount: { mode: 'percent', value: '50' } }),
+        createLineItem({ description: 'Tshirt Dragon Ball Z', quantity: '4', unitPrice: '20', tax: { mode: 'percent', value: '18' } }),
+      ],
+      discount: { mode: 'percent', value: '10' },
+      shipping: '15',
+      fees: '10',
+      feesLabel: 'Handling Fees',
+      amountPaid: '50',
+      notes: 'Thank you!',
+      terms: 'Late payments are subject to 2% extra charge.',
+      options: {
+        perItemTax: true,
+        perItemDiscount: true,
+        showShipping: true,
+        showFees: true,
+        showPaid: true,
+        fitToPage: false,
+      },
+    };
+
+    const { pageCount, text } = await renderAndRead(invoice);
+    expect(pageCount, 'a three-item invoice must not need two pages').toBe(1);
+    expect(text).toContain('AMOUNT DUE');
+    expect(text).toContain('Late payments are subject to 2% extra charge.');
+  });
+
+  it('fits a long invoice onto one page when asked', async () => {
+    const many = Array.from({ length: 34 }, (_, i) =>
+      createLineItem({ description: `Consulting session ${i + 1}`, quantity: '1', unitPrice: '250' }),
+    );
+    const base = createInvoice({ today: '2026-03-09' });
+    const spilling: Invoice = {
+      ...base,
+      business: { ...base.business, name: 'Northwind Studio' },
+      customer: { ...base.customer, name: 'Acme Corporation' },
+      items: many,
+    };
+
+    const before = await renderAndRead(spilling);
+    expect(before.pageCount, 'this invoice should need more than one page').toBeGreaterThan(1);
+
+    // The scale the preview measures for this content.
+    const after = await renderAndRead(
+      { ...spilling, options: { ...spilling.options, fitToPage: true } },
+      0.62,
+    );
+    expect(after.pageCount, 'fit to one page must produce exactly one page').toBe(1);
+    // Nothing is dropped to make it fit.
+    expect(after.text).toContain('Consulting session 34');
+    expect(after.text).toContain('TOTAL DUE');
+  });
+
+  it('keeps text extractable even at the smallest fit scale', async () => {
+    // Tracking is proportional to font size precisely so that shrinking the
+    // document cannot push it past the threshold where a PDF reader emits one
+    // glyph at a time. This is that guarantee, at the smallest scale allowed.
+    const { text } = await renderAndRead(
+      build(ONE_ITEM, { options: { fitToPage: true } as Invoice['options'] }),
+      MIN_FIT_SCALE,
+    );
+    expect(text).toContain('DESCRIPTION');
+    expect(text).toContain('AMOUNT');
+    expect(text).toContain('TOTAL DUE');
+    expect(text).not.toContain('D E S C R I P T I O N');
+  });
+
+  it('leaves an invoice alone when it already fits', async () => {
+    const { pageCount } = await renderAndRead(
+      build(ONE_ITEM, { options: { fitToPage: true } as Invoice['options'] }),
+      1,
+    );
+    expect(pageCount).toBe(1);
   });
 
   it('embeds an uploaded logo', async () => {

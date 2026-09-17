@@ -14,6 +14,7 @@ import { EditorSkeleton, PreviewSkeleton } from '@/components/ui/Skeleton';
 import { Button } from '@/components/ui/Button';
 import { CheckIcon, EyeIcon, PencilIcon, PlusIcon } from '@/components/ui/Icons';
 import { InvoicePreview } from '@/components/preview/InvoicePreview';
+import { FitToPageMeasurer } from '@/components/preview/FitToPageMeasurer';
 import { useInvoiceStore } from '@/state/invoice-store';
 import { useToast } from '@/components/ui/Toast';
 import { t } from '@/lib/i18n';
@@ -82,11 +83,19 @@ function EditorBody({
   const { dispatch, issues, locale, dateStyle, canPersist, profile, commitToRecent, newInvoice } =
     store;
 
+  /**
+   * How far the document must shrink to fit one page, measured off a hidden
+   * copy of the sheet. Held here so the preview and the PDF scale by the same
+   * amount, which is what keeps the download matching what is on screen.
+   */
+  const [fitScale, setFitScale] = useState(1);
+
   const actions = useInvoiceActions({
     invoice,
     totals,
     locale,
     dateStyle,
+    fitScale,
     onCommit: commitToRecent,
   });
 
@@ -122,7 +131,9 @@ function EditorBody({
               aria-selected={tab === id}
               onClick={() => setTab(id)}
               className={`flex h-10 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-md text-[13px] font-medium transition-colors duration-150 ease-[var(--ease-out-quick)] ${
-                tab === id ? 'bg-ink text-canvas' : 'bg-surface text-ink-muted hover:text-ink'
+                tab === id
+                  ? 'bg-primary text-primary-ink'
+                  : 'bg-raised text-ink-muted hover:text-ink'
               }`}
             >
               <Icon size={14} />
@@ -187,8 +198,10 @@ function EditorBody({
 
           <DesignPanel
             invoice={invoice}
+            fitScale={fitScale}
             onPatch={(patch) => dispatch({ type: 'patch', patch })}
             onPatchBranding={(patch) => dispatch({ type: 'patchBranding', patch })}
+            onToggleOption={(patch) => dispatch({ type: 'patchOptions', patch })}
           />
 
           <div className="flex items-center justify-between gap-3 border-t border-line pt-5">
@@ -237,6 +250,7 @@ function EditorBody({
               totals={totals}
               locale={locale}
               dateStyle={dateStyle}
+              fitScale={fitScale}
             />
           </div>
 
@@ -245,6 +259,18 @@ function EditorBody({
           </p>
         </div>
       </div>
+
+      {/* Measured only while the option is on, so nothing is laid out twice
+          for the invoices that do not need it. */}
+      {invoice.options.fitToPage ? (
+        <FitToPageMeasurer
+          invoice={invoice}
+          totals={totals}
+          locale={locale}
+          dateStyle={dateStyle}
+          onScale={setFitScale}
+        />
+      ) : null}
 
       <ActionBar
         variant="fixed"

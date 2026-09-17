@@ -8,29 +8,35 @@
  * a design task, which is not what the visitor came here to do.
  */
 
-import { SelectField } from '@/components/ui/Field';
+import { SelectField, Toggle } from '@/components/ui/Field';
 import { CheckIcon } from '@/components/ui/Icons';
 import type { Branding, Invoice, PaperSize, TemplateId } from '@/lib/invoice';
 import {
   ACCENT_PRESETS,
-  FONT_CHOICES,
+  MIN_FIT_SCALE,
   PAPER_LIST,
   TEMPLATE_LIST,
   isValidHex,
   safeHex,
 } from '@/lib/templates';
+import { FONT_CHOICES } from '@/lib/fonts';
 import { track } from '@/lib/analytics';
 import { t } from '@/lib/i18n';
 import { Panel } from './Panel';
 
 export function DesignPanel({
   invoice,
+  fitScale,
   onPatch,
   onPatchBranding,
+  onToggleOption,
 }: {
   invoice: Invoice;
+  /** The measured shrink factor, so the control can say what it will do. */
+  fitScale: number;
   onPatch: (patch: Partial<Invoice>) => void;
   onPatchBranding: (patch: Partial<Branding>) => void;
+  onToggleOption: (patch: Partial<Invoice['options']>) => void;
 }) {
   const accent = safeHex(invoice.branding.accentColor);
 
@@ -55,7 +61,7 @@ export function DesignPanel({
               title={template.description}
               className={`group flex cursor-pointer flex-col gap-2 rounded-md border p-2 text-left transition-colors duration-150 ease-[var(--ease-out-quick)] ${
                 selected
-                  ? 'border-ink bg-surface'
+                  ? 'border-primary bg-accent-wash'
                   : 'border-line hover:border-line-strong hover:bg-surface'
               }`}
             >
@@ -86,7 +92,7 @@ export function DesignPanel({
                 title={preset.name}
                 onClick={() => onPatchBranding({ accentColor: preset.value })}
                 className={`tap-44 relative size-7 cursor-pointer rounded-full border-2 transition-transform duration-150 ease-[var(--ease-out-quick)] hover:scale-105 ${
-                  selected ? 'border-ink' : 'border-transparent'
+                  selected ? 'border-primary' : 'border-transparent'
                 }`}
                 style={{ backgroundColor: preset.value }}
               />
@@ -123,7 +129,7 @@ export function DesignPanel({
         >
           {FONT_CHOICES.map((font) => (
             <option key={font.id} value={font.id}>
-              {font.name}
+              {font.name} — {font.description.split(' — ')[1] ?? font.description}
             </option>
           ))}
         </SelectField>
@@ -139,6 +145,30 @@ export function DesignPanel({
             </option>
           ))}
         </SelectField>
+      </div>
+
+      {/*
+       * Fit to one page.
+       *
+       * Scales the whole document — type, margins and row spacing together —
+       * until it lands on a single sheet, rather than letting an invoice spill
+       * two lines onto a second page.
+       */}
+      <div className="flex flex-col gap-1.5 rounded-md border border-line bg-surface p-3">
+        <Toggle
+          label="Fit to one page"
+          checked={invoice.options.fitToPage}
+          onChange={(next) => onToggleOption({ fitToPage: next })}
+          description={
+            invoice.options.fitToPage
+              ? fitScale >= 0.999
+                ? 'Already fits — nothing to shrink.'
+                : fitScale <= MIN_FIT_SCALE + 0.001
+                  ? `Scaled to ${Math.round(fitScale * 100)}%, the smallest size that stays readable. This invoice may still run over.`
+                  : `Everything scaled to ${Math.round(fitScale * 100)}% to fit on one page.`
+              : 'Shrink type and spacing together so the invoice lands on a single sheet.'
+          }
+        />
       </div>
     </Panel>
   );

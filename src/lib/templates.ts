@@ -10,7 +10,7 @@
  * pixels by a single factor, so the preview is a true scale model of the page.
  */
 
-import type { FontStyleId, PaperSize, TemplateId } from './invoice';
+import type { PaperSize, TemplateId } from './invoice';
 
 export interface TemplateSpec {
   id: TemplateId;
@@ -92,54 +92,44 @@ export function getTemplate(id: TemplateId): TemplateSpec {
   return TEMPLATES[id] ?? TEMPLATES.classic;
 }
 
+/** Below this the document stops being comfortably readable in print. */
+export const MIN_FIT_SCALE = 0.55;
+
+/**
+ * Shrink a template proportionally.
+ *
+ * Type sizes, page margins and cell padding all scale together, so a scaled
+ * invoice keeps its proportions instead of turning into small text in a
+ * large frame. Used by "Fit to one page", and applied identically by the
+ * preview and the PDF so the two still agree.
+ */
+export function scaleTemplate(spec: TemplateSpec, scale: number): TemplateSpec {
+  if (scale >= 0.999) return spec;
+  const s = Math.max(MIN_FIT_SCALE, Math.min(1, scale));
+  return {
+    ...spec,
+    fontSize: {
+      docTitle: spec.fontSize.docTitle * s,
+      sectionLabel: spec.fontSize.sectionLabel * s,
+      body: spec.fontSize.body * s,
+      small: spec.fontSize.small * s,
+      total: spec.fontSize.total * s,
+    },
+    space: {
+      // Margins shrink more gently than type: a page with no margin reads as
+      // broken even when the text still fits.
+      page: spec.space.page * (0.55 + 0.45 * s),
+      section: spec.space.section * s,
+      cell: spec.space.cell * s,
+    },
+  };
+}
+
 export const TEMPLATE_LIST: readonly TemplateSpec[] = [
   TEMPLATES.classic,
   TEMPLATES.modern,
   TEMPLATES.minimal,
 ];
-
-// --- Fonts -----------------------------------------------------------------
-
-export interface FontChoice {
-  id: FontStyleId;
-  name: string;
-  /** CSS stack for the HTML preview. */
-  css: string;
-  /**
-   * PDF family. These three are built into the PDF format itself, so the
-   * download needs no font files, stays small, and always has selectable text.
-   */
-  pdf: string;
-  pdfBold: string;
-}
-
-export const FONT_CHOICES: readonly FontChoice[] = [
-  {
-    id: 'sans',
-    name: 'Sans',
-    css: 'Helvetica, Arial, "Helvetica Neue", sans-serif',
-    pdf: 'Helvetica',
-    pdfBold: 'Helvetica-Bold',
-  },
-  {
-    id: 'serif',
-    name: 'Serif',
-    css: '"Times New Roman", Times, Georgia, serif',
-    pdf: 'Times-Roman',
-    pdfBold: 'Times-Bold',
-  },
-  {
-    id: 'mono',
-    name: 'Mono',
-    css: '"Courier New", Courier, monospace',
-    pdf: 'Courier',
-    pdfBold: 'Courier-Bold',
-  },
-];
-
-export function getFont(id: FontStyleId): FontChoice {
-  return FONT_CHOICES.find((font) => font.id === id) ?? FONT_CHOICES[0]!;
-}
 
 // --- Paper -----------------------------------------------------------------
 
@@ -166,16 +156,20 @@ export const PAPER_LIST: readonly PaperSpec[] = [PAPER.a4, PAPER.letter];
 
 // --- Accent colours --------------------------------------------------------
 
-/** A restrained set; one accent per invoice, all legible when printed. */
+/**
+ * A restrained set; one accent per invoice, all legible when printed in black
+ * and white. Navy leads because it is the one that reads as "established
+ * business" rather than as a colour choice.
+ */
 export const ACCENT_PRESETS: readonly { value: string; name: string }[] = [
+  { value: '#1E3A5F', name: 'Navy' },
   { value: '#2563EB', name: 'Blue' },
-  { value: '#0F172A', name: 'Ink' },
   { value: '#0F766E', name: 'Teal' },
   { value: '#047857', name: 'Green' },
   { value: '#B45309', name: 'Amber' },
-  { value: '#BE123C', name: 'Crimson' },
-  { value: '#6D28D9', name: 'Violet' },
-  { value: '#57534E', name: 'Stone' },
+  { value: '#9F1239', name: 'Burgundy' },
+  { value: '#5B21B6', name: 'Violet' },
+  { value: '#334155', name: 'Slate' },
 ];
 
 const HEX = /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/;
@@ -185,7 +179,7 @@ export function isValidHex(value: string): boolean {
 }
 
 /** Normalise to a 6-digit hex, falling back when the input is not a colour. */
-export function safeHex(value: string, fallback = '#2563EB'): string {
+export function safeHex(value: string, fallback = '#1E3A5F'): string {
   const trimmed = value.trim();
   if (!HEX.test(trimmed)) return fallback;
   if (trimmed.length === 4) {

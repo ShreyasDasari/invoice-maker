@@ -14,13 +14,15 @@
  * what keeps the download matching what the user was looking at.
  *
  * One constraint worth knowing before changing the styles below: letter
- * spacing past roughly 0.8pt at label sizes makes a PDF reader emit each glyph
- * separately, so copying "DESCRIPTION" out of the file yields
- * "D E S C R I P T I O N" and accounting software parses it the same way.
- * Tracking here is kept under that threshold, and the preview's CSS tracking
- * is matched to it.
+ * spacing past roughly 0.09em makes a PDF reader emit each glyph separately, so
+ * copying "DESCRIPTION" out of the file yields "D E S C R I P T I O N" and
+ * accounting software parses it the same way. All tracking is therefore
+ * expressed as a fraction of font size via `track()` — a fixed point value
+ * would cross that threshold as soon as "Fit to one page" shrank the type. The
+ * preview's CSS uses the same ratios in `em`.
  */
 
+import * as ReactPdf from '@react-pdf/renderer';
 import { Document, Image, Page, StyleSheet, Text, View } from '@react-pdf/renderer';
 import type { InvoiceTotals } from '@/lib/calc';
 import type { Invoice } from '@/lib/invoice';
@@ -34,7 +36,9 @@ import {
 } from '@/lib/format';
 import { getCurrency } from '@/lib/currency';
 import { ZERO, parseDec } from '@/lib/money';
-import { getFont, getPaper, getTemplate, onAccent, safeHex, tint } from '@/lib/templates';
+import { getPaper, getTemplate, onAccent, safeHex, scaleTemplate, tint } from '@/lib/templates';
+import { getFont, resolveWeight } from '@/lib/fonts';
+import { registerPdfFonts } from '@/lib/pdf-fonts';
 
 const INK = '#0A0A0A';
 const MUTED = '#525252';
@@ -45,14 +49,42 @@ export interface InvoiceDocumentProps {
   totals: InvoiceTotals;
   locale: string;
   dateStyle: DateFormatId;
+  /**
+   * Proportional shrink factor from "Fit to one page". Measured by the preview
+   * and passed in, so both renderers scale by exactly the same amount.
+   */
+  fitScale?: number;
 }
 
-export function InvoiceDocument({ invoice, totals, locale, dateStyle }: InvoiceDocumentProps) {
-  const spec = getTemplate(invoice.template);
+export function InvoiceDocument({
+  invoice,
+  totals,
+  locale,
+  dateStyle,
+  fitScale = 1,
+}: InvoiceDocumentProps) {
+  // Idempotent: the first document to render installs the font files.
+  registerPdfFonts(ReactPdf);
+
+  const spec = scaleTemplate(
+    getTemplate(invoice.template),
+    invoice.options.fitToPage ? fitScale : 1,
+  );
   const paper = getPaper(invoice.paperSize);
   const font = getFont(invoice.branding.fontStyle);
   const accent = safeHex(invoice.branding.accentColor);
   const currency = getCurrency(invoice.currency);
+
+  // One family, differentiated by weight, matching the preview's @font-face.
+  /**
+   * Tracking as a fraction of font size, kept well under the ~0.09em at which
+   * a PDF reader starts emitting one glyph at a time.
+   */
+  const track = (size: number, ratio = 0.055) => size * ratio;
+
+  const regular = { fontFamily: font.family, fontWeight: 400 as const };
+  const semibold = { fontFamily: font.family, fontWeight: resolveWeight(font, 600) };
+  const bold = { fontFamily: font.family, fontWeight: resolveWeight(font, 700) };
 
   const showTaxColumn = invoice.options.perItemTax;
   const showDiscountColumn =
@@ -70,23 +102,17 @@ export function InvoiceDocument({ invoice, totals, locale, dateStyle }: InvoiceD
 
   const s = StyleSheet.create({
     page: {
-      fontFamily: font.pdf,
+      ...regular,
       fontSize: spec.fontSize.body,
       color: INK,
       paddingTop: spec.header === 'band' ? 0 : spec.space.page,
       paddingBottom: spec.space.page,
       paddingHorizontal: spec.header === 'band' ? 0 : spec.space.page,
-      // lineHeight deliberately does NOT live here. On the Page it is
-      // inherited by the absolutely-positioned page-number node, whose layout
-      // then resolves off the page and stops drawing. It belongs on the
-      // flowing content instead.
     },
     body: {
       paddingHorizontal: spec.header === 'band' ? spec.space.page : 0,
-      lineHeight: 1.45,
     },
     band: {
-      lineHeight: 1.45,
       backgroundColor: accent,
       paddingHorizontal: spec.space.page,
       paddingTop: spec.space.page - 8,
@@ -97,19 +123,19 @@ export function InvoiceDocument({ invoice, totals, locale, dateStyle }: InvoiceD
       justifyContent: 'space-between',
     },
     title: {
-      fontFamily: font.pdfBold,
+      ...bold,
       fontSize: spec.fontSize.docTitle,
-      letterSpacing: spec.id === 'minimal' ? 1.6 : -0.5,
-      lineHeight: 1,
+      letterSpacing:
+        spec.id === 'minimal' ? track(spec.fontSize.docTitle, 0.075) : -0.5,
     },
     label: {
-      fontFamily: font.pdfBold,
+      ...semibold,
       fontSize: spec.fontSize.sectionLabel,
-      letterSpacing: spec.uppercaseLabels ? 0.5 : 0.2,
+      letterSpacing: spec.uppercaseLabels ? track(spec.fontSize.sectionLabel) : 0,
       color: MUTED,
       marginBottom: 3,
     },
-    partyName: { fontFamily: font.pdfBold, color: INK },
+    partyName: { ...bold, color: INK },
     muted: { color: MUTED },
     small: { fontSize: spec.fontSize.small },
     row: { flexDirection: 'row' },
@@ -121,7 +147,7 @@ export function InvoiceDocument({ invoice, totals, locale, dateStyle }: InvoiceD
       textAlign: 'right',
     },
     metaValue: {
-      fontFamily: font.pdfBold,
+      ...semibold,
       fontSize: spec.fontSize.small,
       textAlign: 'right',
     },
@@ -133,9 +159,9 @@ export function InvoiceDocument({ invoice, totals, locale, dateStyle }: InvoiceD
       borderBottomStyle: 'solid',
     },
     th: {
-      fontFamily: font.pdfBold,
+      ...semibold,
       fontSize: spec.fontSize.sectionLabel,
-      letterSpacing: spec.uppercaseLabels ? 0.5 : 0.2,
+      letterSpacing: spec.uppercaseLabels ? track(spec.fontSize.sectionLabel) : 0,
       color: headerInk,
       paddingVertical: spec.space.cell,
       paddingHorizontal: 5,
@@ -260,7 +286,7 @@ export function InvoiceDocument({ invoice, totals, locale, dateStyle }: InvoiceD
       <Text
         style={{
           color: strong ? INK : MUTED,
-          fontFamily: strong ? font.pdfBold : font.pdf,
+          ...(strong ? bold : regular),
           fontSize: strong ? spec.fontSize.body : spec.fontSize.small,
         }}
       >
@@ -269,7 +295,7 @@ export function InvoiceDocument({ invoice, totals, locale, dateStyle }: InvoiceD
       <Text
         style={{
           color: dim ? MUTED : INK,
-          fontFamily: strong ? font.pdfBold : font.pdf,
+          ...(strong ? bold : regular),
           fontSize: strong ? spec.fontSize.body : spec.fontSize.small,
         }}
       >
@@ -518,15 +544,15 @@ export function InvoiceDocument({ invoice, totals, locale, dateStyle }: InvoiceD
               >
                 <Text
                   style={{
-                    fontFamily: font.pdfBold,
+                    ...semibold,
                     fontSize: spec.fontSize.sectionLabel,
-                    letterSpacing: 0.5,
+                    letterSpacing: track(spec.fontSize.sectionLabel),
                     color: spec.accent === 'text' ? accent : INK,
                   }}
                 >
                   {invoice.options.showPaid ? 'AMOUNT DUE' : 'TOTAL DUE'}
                 </Text>
-                <Text style={{ fontFamily: font.pdfBold, fontSize: spec.fontSize.total }}>
+                <Text style={{ ...bold, fontSize: spec.fontSize.total }}>
                   {money(invoice.options.showPaid ? totals.amountDue : totals.total)}
                 </Text>
               </View>

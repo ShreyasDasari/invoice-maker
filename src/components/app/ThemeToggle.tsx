@@ -100,7 +100,7 @@ export function ThemeToggle() {
             'transition-colors duration-150',
             'tap-44',
             mode === value
-              ? 'bg-ink text-canvas'
+              ? 'bg-primary text-primary-ink'
               : 'text-ink-subtle hover:bg-surface hover:text-ink',
           ].join(' ')}
         >

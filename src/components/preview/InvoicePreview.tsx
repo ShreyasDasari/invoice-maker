@@ -27,6 +27,8 @@ export interface InvoicePreviewProps {
   dateStyle: DateFormatId;
   /** Largest scale allowed, so the sheet never looks blown up on a big screen. */
   maxScale?: number;
+  /** Proportional shrink from "Fit to one page". */
+  fitScale?: number;
 }
 
 export function InvoicePreview({
@@ -35,6 +37,7 @@ export function InvoicePreview({
   locale,
   dateStyle,
   maxScale = 1,
+  fitScale = 1,
 }: InvoicePreviewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const sheetRef = useRef<HTMLDivElement>(null);
@@ -63,7 +66,7 @@ export function InvoicePreview({
     observer.observe(container);
     if (sheetRef.current) observer.observe(sheetRef.current);
     return () => observer.disconnect();
-  }, [maxScale, sheetWidth, invoice]);
+  }, [maxScale, sheetWidth, invoice, fitScale]);
 
   return (
     <div ref={containerRef} className="print-root w-full">
@@ -88,6 +91,7 @@ export function InvoicePreview({
             totals={totals}
             locale={locale}
             dateStyle={dateStyle}
+            fitScale={fitScale}
           />
         </div>
       </div>

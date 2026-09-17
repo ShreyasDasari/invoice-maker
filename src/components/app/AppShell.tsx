@@ -20,7 +20,7 @@ export function AppShell({
     <div className="flex min-h-dvh flex-col">
       <a
         href="#main"
-        className="sr-only-focusable no-print absolute left-4 top-3 z-50 rounded-md bg-ink px-3 py-2 text-[13px] font-medium text-canvas"
+        className="sr-only-focusable no-print absolute left-4 top-3 z-50 rounded-md bg-primary px-3 py-2 text-[13px] font-medium text-primary-ink"
       >
         {t.nav.skipToEditor}
       </a>

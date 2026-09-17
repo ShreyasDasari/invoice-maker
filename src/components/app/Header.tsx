@@ -33,7 +33,7 @@ export function Header() {
           className="-m-2 flex min-h-11 shrink-0 items-center gap-2 rounded p-2 text-[15px] font-semibold tracking-tight text-ink sm:m-0 sm:min-h-0 sm:p-0"
           aria-label={`${t.brand} — home`}
         >
-          <span className="grid size-6 place-items-center rounded bg-ink text-canvas" aria-hidden="true">
+          <span className="grid size-6 place-items-center rounded bg-primary text-primary-ink" aria-hidden="true">
             <FileTextIcon size={14} />
           </span>
           <span className="hidden sm:inline">{t.brand}</span>
@@ -51,7 +51,7 @@ export function Header() {
                     aria-current={current ? 'page' : undefined}
                     className={`inline-flex h-11 items-center whitespace-nowrap rounded-md px-2.5 text-[13px] transition-colors duration-150 ease-[var(--ease-out-quick)] sm:h-8 ${
                       current
-                        ? 'bg-surface font-medium text-ink'
+                        ? 'bg-accent-wash font-semibold text-ink'
                         : 'text-ink-muted hover:bg-surface hover:text-ink'
                     }`}
                   >

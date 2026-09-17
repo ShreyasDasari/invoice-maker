@@ -20,7 +20,7 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const VARIANTS: Record<Variant, string> = {
   primary:
-    'bg-ink text-canvas border border-ink hover:bg-ink-muted hover:border-ink-muted active:scale-[0.99]',
+    'bg-primary text-primary-ink border border-primary hover:bg-primary-hover hover:border-primary-hover active:scale-[0.99]',
   secondary:
     'bg-raised text-ink border border-line-strong hover:bg-surface hover:border-ink-subtle active:scale-[0.99]',
   ghost: 'bg-transparent text-ink-muted border border-transparent hover:bg-surface hover:text-ink',

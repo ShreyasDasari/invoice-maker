@@ -19,7 +19,8 @@ import { PLACEHOLDERS } from '@/lib/invoice';
 import { formatAmount, formatDate, formatMoney, formatQuantity, formatRate, type DateFormatId } from '@/lib/format';
 import { getCurrency } from '@/lib/currency';
 import { ZERO, parseDec } from '@/lib/money';
-import { getFont, getPaper, getTemplate, onAccent, safeHex, tint } from '@/lib/templates';
+import { getPaper, getTemplate, onAccent, safeHex, scaleTemplate, tint } from '@/lib/templates';
+import { getFont } from '@/lib/fonts';
 
 /** PDF points to CSS pixels at 96dpi. */
 const PT = 96 / 72;
@@ -31,6 +32,10 @@ export interface InvoiceSheetProps {
   dateStyle: DateFormatId;
   /** Renders placeholder text for empty fields, so the preview reads as a document. */
   showPlaceholders?: boolean;
+  /** Proportional shrink from "Fit to one page". */
+  fitScale?: number;
+  /** Ignores the fit scale — used by the hidden sheet that measures it. */
+  measuring?: boolean;
 }
 
 export function InvoiceSheet({
@@ -39,8 +44,13 @@ export function InvoiceSheet({
   locale,
   dateStyle,
   showPlaceholders = true,
+  fitScale = 1,
+  measuring = false,
 }: InvoiceSheetProps) {
-  const spec = getTemplate(invoice.template);
+  const spec = scaleTemplate(
+    getTemplate(invoice.template),
+    !measuring && invoice.options.fitToPage ? fitScale : 1,
+  );
   const paper = getPaper(invoice.paperSize);
   const font = getFont(invoice.branding.fontStyle);
   const accent = safeHex(invoice.branding.accentColor);
@@ -52,17 +62,22 @@ export function InvoiceSheet({
 
   const sheetVars = {
     '--sheet-width': `${paper.width * PT}px`,
-    '--sheet-height': `${paper.height * PT}px`,
+    // While measuring, the sheet must be free to grow past one page so its
+    // natural height can be read; otherwise it holds the true page height.
+    '--sheet-height': measuring ? '0px' : `${paper.height * PT}px`,
     '--sheet-padding': `${spec.space.page * PT}px`,
     '--sheet-font': font.css,
     '--sheet-body': `${spec.fontSize.body * PT}px`,
+    // The PDF renderer's intrinsic leading for this face, so a block of text
+    // is the same height here as in the download.
+    '--sheet-leading': `${font.leading}`,
   } as CSSProperties;
 
   const label = (text: string) => (
     <span
       style={{
         fontSize: spec.fontSize.sectionLabel * PT,
-        letterSpacing: spec.uppercaseLabels ? '0.067em' : '0.02em',
+        letterSpacing: spec.uppercaseLabels ? '0.055em' : '0',
         textTransform: spec.uppercaseLabels ? 'uppercase' : 'none',
         color: muted,
         fontWeight: 600,
@@ -153,7 +168,7 @@ export function InvoiceSheet({
       style={{
         fontSize: spec.fontSize.docTitle * PT,
         fontWeight: spec.id === 'minimal' ? 500 : 700,
-        letterSpacing: spec.id === 'minimal' ? '0.08em' : '-0.02em',
+        letterSpacing: spec.id === 'minimal' ? '0.075em' : '-0.02em',
         textTransform: spec.id === 'minimal' ? 'uppercase' : 'none',
         color: spec.accent === 'text' ? accent : spec.header === 'band' ? onAccent(accent) : ink,
         lineHeight: 1,
@@ -328,7 +343,7 @@ export function InvoiceSheet({
     padding: cellPad,
     fontSize: spec.fontSize.sectionLabel * PT,
     fontWeight: 600,
-    letterSpacing: spec.uppercaseLabels ? '0.067em' : '0.02em',
+    letterSpacing: spec.uppercaseLabels ? '0.055em' : '0',
     textTransform: spec.uppercaseLabels ? 'uppercase' : 'none',
     color: headerInk,
     borderBottom: spec.tableHeaderFill === 'none' ? `1px solid ${ink}` : 'none',
@@ -511,7 +526,7 @@ export function InvoiceSheet({
         style={{
           fontSize: spec.fontSize.sectionLabel * PT,
           fontWeight: 600,
-          letterSpacing: '0.067em',
+          letterSpacing: '0.055em',
           textTransform: 'uppercase',
           color: spec.accent === 'text' ? accent : ink,
         }}

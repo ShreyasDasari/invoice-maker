@@ -259,7 +259,7 @@ export function Toggle({
         aria-labelledby={labelId}
         onClick={() => onChange(!checked)}
         className={`tap-44 relative mt-0.5 h-5 w-9 shrink-0 cursor-pointer rounded-full border transition-colors duration-150 ease-[var(--ease-out-quick)] ${
-          checked ? 'border-ink bg-ink' : 'border-line-strong bg-surface'
+          checked ? 'border-primary bg-primary' : 'border-line-strong bg-surface'
         }`}
       >
         <span

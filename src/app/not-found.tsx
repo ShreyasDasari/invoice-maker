@@ -17,7 +17,7 @@ export default function NotFound() {
         </p>
         <Link
           href="/"
-          className="mt-6 inline-flex h-11 items-center rounded-md bg-ink px-5 text-sm font-medium text-canvas transition-colors hover:bg-ink-muted"
+          className="mt-6 inline-flex h-11 items-center rounded-md bg-primary px-5 text-sm font-medium text-primary-ink transition-colors hover:bg-primary-hover"
         >
           Create an invoice
         </Link>

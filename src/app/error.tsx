@@ -32,7 +32,7 @@ export default function GlobalError({
         <button
           type="button"
           onClick={reset}
-          className="inline-flex h-11 cursor-pointer items-center rounded-md bg-ink px-5 text-sm font-medium text-canvas transition-colors hover:bg-ink-muted"
+          className="inline-flex h-11 cursor-pointer items-center rounded-md bg-primary px-5 text-sm font-medium text-primary-ink transition-colors hover:bg-primary-hover"
         >
           Try again
         </button>
