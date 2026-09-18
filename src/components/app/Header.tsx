@@ -15,16 +15,16 @@ import { ThemeToggle } from './ThemeToggle';
 import { t } from '@/lib/i18n';
 
 const LINKS = [
-  { href: '/', label: t.nav.create },
+  { href: '/create', label: t.nav.create },
+  { href: '/templates', label: t.nav.templates },
   { href: '/recent', label: t.nav.recent },
-  { href: '/invoice-template', label: t.nav.templates },
 ];
 
 export function Header() {
   const pathname = usePathname();
 
   return (
-    <header className="app-header sticky top-0 z-40 h-[var(--header-height)] border-b border-line bg-canvas/95 backdrop-blur-sm">
+    <header className="app-header glass-bar sticky top-0 z-40 h-[var(--header-height)] border-b border-line/70">
       <div className="mx-auto flex h-full max-w-[1600px] items-center gap-2 px-4 sm:gap-4 sm:px-6">
         <Link
           href="/"
@@ -42,8 +42,7 @@ export function Header() {
         <nav aria-label="Main" className="min-w-0 flex-1">
           <ul className="flex items-center gap-0.5 overflow-x-auto no-scrollbar">
             {LINKS.map((link) => {
-              // The editor is the home route, so only an exact match is current.
-              const current = link.href === '/' ? pathname === '/' : pathname.startsWith(link.href);
+              const current = pathname === link.href || pathname.startsWith(`${link.href}/`);
               return (
                 <li key={link.href}>
                   <Link

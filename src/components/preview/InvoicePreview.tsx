@@ -8,7 +8,8 @@
  * this a preview and not an approximation: line breaks, column widths and
  * spacing are exactly what will print.
  *
- * The transform is dropped by the print stylesheet, so printing lands at 100%.
+ * Printing does not use this at all — it renders its own unscaled copy through
+ * a portal — so the transform here is purely for fitting the screen.
  */
 
 import { useEffect, useRef, useState } from 'react';
@@ -69,9 +70,11 @@ export function InvoicePreview({
   }, [maxScale, sheetWidth, invoice, fitScale]);
 
   return (
-    <div ref={containerRef} className="print-root w-full">
+    <div ref={containerRef} className="preview-root w-full">
       <div
-        className="print-scale mx-auto origin-top"
+        // overflow-hidden: the sheet keeps its full page width in layout even
+        // when scaled down, and would otherwise widen the page on a phone.
+        className="mx-auto origin-top overflow-hidden"
         style={{
           width: sheetWidth * scale,
           height: height !== null ? height * scale : undefined,

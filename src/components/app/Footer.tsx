@@ -11,6 +11,14 @@ export function Footer() {
 
         <nav aria-label="Footer">
           <ul className="flex flex-wrap items-center gap-x-5 gap-y-2">
+            <li>
+              <Link
+                href="/templates"
+                className="inline-flex min-h-11 items-center text-[12px] text-ink-muted underline-offset-2 transition-colors hover:text-ink hover:underline sm:min-h-0"
+              >
+                Templates
+              </Link>
+            </li>
             {SEO_PAGES.map((page) => (
               <li key={page.slug}>
                 <Link

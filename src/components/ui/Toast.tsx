@@ -133,11 +133,11 @@ function ToastItem({
   return (
     <div
       className={[
-        'pointer-events-auto flex w-full max-w-sm items-start gap-2.5 rounded-md border px-3 py-2.5',
-        'shadow-[var(--shadow-pop)] motion-safe:animate-[toast-in_200ms_var(--ease-out-quick)]',
+        'pointer-events-auto flex w-full max-w-sm items-start gap-2.5 rounded-lg px-3 py-2.5',
+        'motion-safe:animate-[toast-in_200ms_var(--ease-out-quick)]',
         toast.tone === 'error'
-          ? 'border-danger/40 bg-danger-wash text-ink'
-          : 'border-line bg-raised text-ink',
+          ? 'border border-danger/40 bg-danger-wash text-ink shadow-[var(--shadow-pop)]'
+          : 'glass-strong text-ink',
       ].join(' ')}
     >
       {toast.tone === 'error' ? (

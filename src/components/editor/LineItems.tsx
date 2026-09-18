@@ -184,7 +184,7 @@ export function LineItems({
           return (
             <li
               key={item.id}
-              className="rounded-md border border-line p-3 lg:border-0 lg:p-0"
+              className="glass rounded-xl p-3 lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none lg:backdrop-filter-none"
             >
               {/* Wide layout: one grid row per line. */}
               <div

@@ -54,6 +54,22 @@
   --radius-md: 4px;
   --radius-lg: 6px;
 
+  /*
+   * Glass.
+   *
+   * The fill stays at 0.72 opacity rather than the 0.15 of a decorative
+   * glassmorphic mock: the interface sits over a tinted backdrop, and text has
+   * to stay legible against whatever passes beneath it. At this opacity the
+   * blur still reads as frosted glass while every foreground pair holds its
+   * contrast ratio, which the browser suite checks on every run.
+   */
+  --glass-fill: rgb(255 255 255 / 0.72);
+  --glass-fill-strong: rgb(255 255 255 / 0.86);
+  --glass-edge: rgb(255 255 255 / 0.75);
+  --glass-blur: 16px;
+  --glass-shadow: 0 1px 2px rgb(15 23 42 / 0.04), 0 12px 32px rgb(15 23 42 / 0.08);
+  --glass-sheen-color: rgb(255 255 255 / 0.55);
+
   /* Restrained elevation: one step for menus, one for sheets. */
   --shadow-pop: 0 1px 2px rgb(0 0 0 / 0.04), 0 8px 24px rgb(0 0 0 / 0.08);
   --shadow-sheet: 0 -1px 2px rgb(0 0 0 / 0.04), 0 -12px 32px rgb(0 0 0 / 0.12);
@@ -71,6 +87,13 @@
  * Dark mode for the application chrome only. The invoice sheet itself stays
  * white in every theme: it is a document about to be printed, not UI.
  */
+[data-theme='dark'] body {
+  background-image:
+    radial-gradient(60rem 40rem at 12% -10%, rgb(56 130 246 / 0.16), transparent 60%),
+    radial-gradient(50rem 34rem at 96% 4%, rgb(20 184 166 / 0.10), transparent 62%),
+    radial-gradient(44rem 30rem at 50% 108%, rgb(99 102 241 / 0.12), transparent 60%);
+}
+
 [data-theme='dark'] {
   /* The same navy family, as lighter tonal variants rather than inversions. */
   --color-canvas: #0b1220;
@@ -90,6 +113,17 @@
   --color-accent-hover: #9cc0f6;
   --color-accent-ink: #0b1220;
   --color-accent-wash: #16233a;
+
+  /*
+   * Glass over a dark ground. The fill is a lightened navy rather than a
+   * transparent white, which would silver the panels and wreck the contrast
+   * of the text sitting on them.
+   */
+  --glass-fill: rgb(30 43 70 / 0.72);
+  --glass-fill-strong: rgb(30 43 70 / 0.90);
+  --glass-edge: rgb(148 178 224 / 0.16);
+  --glass-shadow: 0 1px 2px rgb(0 0 0 / 0.24), 0 14px 36px rgb(0 0 0 / 0.38);
+  --glass-sheen-color: rgb(168 196 240 / 0.22);
 
   --color-danger: #fca5a0;
   --color-danger-wash: #2b1614;
@@ -137,8 +171,19 @@
     scroll-behavior: smooth;
   }
 
+  /*
+   * A soft tinted field behind everything. Glass over a flat colour just looks
+   * like a lighter box, so the page carries a very low-contrast wash for the
+   * blur to pick up. It is fixed, so scrolling costs nothing to repaint.
+   */
   body {
-    background: var(--color-canvas);
+    background-color: var(--color-canvas);
+    background-image:
+      radial-gradient(60rem 40rem at 12% -10%, rgb(37 99 235 / 0.10), transparent 60%),
+      radial-gradient(50rem 34rem at 96% 4%, rgb(13 148 136 / 0.09), transparent 62%),
+      radial-gradient(44rem 30rem at 50% 108%, rgb(30 58 95 / 0.08), transparent 60%);
+    background-attachment: fixed;
+    background-repeat: no-repeat;
     color: var(--color-ink);
     font-family: var(--font-sans);
     /* 16px base: anything smaller triggers iOS zoom-on-focus. */
@@ -198,6 +243,60 @@
 }
 
 @layer utilities {
+  /*
+   * Frosted panel. `backdrop-filter` is the expensive part, so it is applied to
+   * a small number of large surfaces — the header, the panels, the bars — never
+   * to individual controls inside them.
+   */
+  .glass {
+    background: var(--glass-fill);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.6);
+    backdrop-filter: blur(var(--glass-blur)) saturate(1.6);
+    border: 1px solid var(--glass-edge);
+    box-shadow: var(--glass-shadow);
+  }
+
+  /* For surfaces carrying dense text, where more opacity buys legibility. */
+  .glass-strong {
+    background: var(--glass-fill-strong);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.5);
+    backdrop-filter: blur(var(--glass-blur)) saturate(1.5);
+    border: 1px solid var(--glass-edge);
+    box-shadow: var(--glass-shadow);
+  }
+
+  /* A bar pinned to an edge: blur without a full border box. */
+  .glass-bar {
+    background: var(--glass-fill);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.6);
+    backdrop-filter: blur(var(--glass-blur)) saturate(1.6);
+  }
+
+  /*
+   * Where backdrop-filter is unsupported the fill alone would be too
+   * transparent to read against, so those browsers get an opaque surface.
+   */
+  @supports not (backdrop-filter: blur(1px)) {
+    .glass,
+    .glass-strong,
+    .glass-bar {
+      background: var(--color-raised);
+    }
+  }
+
+  /* The thin highlight along the top edge that makes glass read as glass. */
+  .glass-sheen {
+    position: relative;
+  }
+  .glass-sheen::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--glass-sheen-color), transparent);
+    pointer-events: none;
+  }
+
   /* Reachable by keyboard and screen reader, invisible until focused. */
   .sr-only-focusable:not(:focus):not(:focus-within) {
     position: absolute;
@@ -275,11 +374,18 @@
 /* ---------------------------------------------------------------------------
  * Print.
  *
- * Only the invoice prints. Every piece of application chrome is removed, the
- * sheet drops its transform so it lands at true size, and page breaks are
- * steered: the table header repeats, rows stay whole and the totals block
- * stays together.
+ * Only the portalled copy of the invoice prints. It is a direct child of
+ * <body>, so hiding every other top-level element leaves exactly the document
+ * and nothing else — no navigation, no controls, and nothing that can clip it.
+ *
+ * The page margin is zero because the invoice carries its own margin, the same
+ * one the PDF uses. That makes a printed page and a downloaded PDF the same
+ * document rather than two near-misses.
  * ------------------------------------------------------------------------- */
+.print-portal {
+  display: none;
+}
+
 @media print {
   html,
   body {
@@ -288,35 +394,20 @@
     padding: 0 !important;
   }
 
-  .no-print,
-  header.app-header,
-  footer.app-footer {
+  /* Everything that is not the printable invoice. */
+  body > *:not(.print-portal) {
     display: none !important;
   }
 
-  .print-root {
+  .print-portal {
     display: block !important;
-    position: static !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    overflow: visible !important;
-    max-height: none !important;
-    width: auto !important;
   }
 
-  .print-scale {
-    transform: none !important;
-    width: auto !important;
-    height: auto !important;
-    margin: 0 !important;
-  }
-
-  .sheet {
+  .print-portal .sheet {
     width: 100% !important;
     min-height: 0 !important;
-    box-shadow: none !important;
     border: 0 !important;
-    page-break-after: avoid;
+    box-shadow: none !important;
   }
 
   /* Repeat the line-item header on every page. */
@@ -339,7 +430,7 @@
 
   @page {
     size: var(--print-page-size, A4);
-    margin: 12mm;
+    margin: 0;
   }
 }
 

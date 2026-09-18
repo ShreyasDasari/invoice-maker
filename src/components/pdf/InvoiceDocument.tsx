@@ -125,8 +125,10 @@ export function InvoiceDocument({
     title: {
       ...bold,
       fontSize: spec.fontSize.docTitle,
-      letterSpacing:
-        spec.id === 'minimal' ? track(spec.fontSize.docTitle, 0.075) : -0.5,
+      // Tracking on right-aligned text is applied after the final glyph too,
+      // so a negative value pushed the title past the right margin. The
+      // display sizes here read fine untracked.
+      letterSpacing: spec.id === 'minimal' ? track(spec.fontSize.docTitle, 0.075) : 0,
     },
     label: {
       ...semibold,
@@ -241,7 +243,18 @@ export function InvoiceDocument({
       {invoice.business.logo ? (
         <Image
           src={invoice.business.logo}
-          style={{ maxHeight: 54, maxWidth: 180, marginBottom: 8, objectFit: 'contain' }}
+          style={{
+            maxHeight: 54,
+            maxWidth: 180,
+            marginBottom: 8,
+            objectFit: 'contain',
+            // Without this the image box stretches to the full column width
+            // (alignItems defaults to stretch) and objectFit centres the
+            // picture inside it, pushing a tall or square logo up to 40pt to
+            // the right of the business name. The preview does not do that, so
+            // the download stopped matching it.
+            alignSelf: 'flex-start',
+          }}
         />
       ) : null}
       <Text style={[s.partyName, { fontSize: spec.fontSize.body + 2.5 }]}>

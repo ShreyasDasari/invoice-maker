@@ -32,7 +32,7 @@ export function RecentInvoices() {
   const handleOpen = useCallback(
     (id: string) => {
       openRecent(id);
-      router.push('/');
+      router.push('/create');
     },
     [openRecent, router],
   );
@@ -40,7 +40,7 @@ export function RecentInvoices() {
   const handleDuplicate = useCallback(
     (entry: RecentInvoice) => {
       duplicate(entry.invoice);
-      router.push('/');
+      router.push('/create');
     },
     [duplicate, router],
   );
@@ -84,27 +84,27 @@ export function RecentInvoices() {
             {visible.length > 0 ? t.toast.savedLocally : t.privacy.localOnly}
           </p>
         </div>
-        <Button variant="primary" onClick={() => { newInvoice(); router.push('/'); }} iconLeft={<PlusIcon size={15} />}>
+        <Button variant="primary" onClick={() => { newInvoice(); router.push('/create'); }} iconLeft={<PlusIcon size={15} />}>
           {t.actions.newInvoice}
         </Button>
       </div>
 
       {visible.length === 0 ? (
-        <div className="flex flex-col items-center gap-3 rounded-md border border-dashed border-line py-16 text-center">
+        <div className="glass flex flex-col items-center gap-3 rounded-xl border-dashed py-16 text-center">
           <FileTextIcon size={22} className="text-ink-subtle" />
           <div>
             <p className="text-sm font-medium text-ink">{t.empty.recentTitle}</p>
             <p className="mt-0.5 text-[13px] text-ink-muted">{t.empty.recentBody}</p>
           </div>
           <Link
-            href="/"
+            href="/create"
             className="mt-1 inline-flex h-9 items-center rounded-md bg-primary px-3.5 text-[13px] font-medium text-primary-ink transition-colors hover:bg-primary-hover"
           >
             {t.nav.create}
           </Link>
         </div>
       ) : (
-        <ul className="flex flex-col divide-y divide-line rounded-md border border-line">
+        <ul className="glass glass-sheen flex flex-col divide-y divide-line/70 rounded-xl">
           {visible.map((entry) => (
             <li key={entry.id} className="flex items-center gap-3 p-3.5">
               <div className="min-w-0 flex-1">

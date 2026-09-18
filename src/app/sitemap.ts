@@ -5,8 +5,8 @@ import { SEO_PAGES } from '@/lib/seo-pages';
 /**
  * sitemap.xml
  *
- * The tool itself, the landing pages that answer a search, and the privacy
- * page. Pages that only make sense with local data (recent invoices) are left
+ * The home page, the editor, the template gallery, the landing pages that
+ * answer a search, and the privacy page. Pages that only make sense with local data (recent invoices) are left
  * out: there is nothing there for a crawler to index.
  */
 export default function sitemap(): MetadataRoute.Sitemap {
@@ -18,6 +18,18 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified,
       changeFrequency: 'weekly',
       priority: 1,
+    },
+    {
+      url: absoluteUrl('/create'),
+      lastModified,
+      changeFrequency: 'weekly',
+      priority: 0.95,
+    },
+    {
+      url: absoluteUrl('/templates'),
+      lastModified,
+      changeFrequency: 'monthly',
+      priority: 0.9,
     },
     ...SEO_PAGES.map((page) => ({
       url: absoluteUrl(`/${page.slug}`),

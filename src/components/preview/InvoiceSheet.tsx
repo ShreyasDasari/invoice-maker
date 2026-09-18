@@ -168,7 +168,7 @@ export function InvoiceSheet({
       style={{
         fontSize: spec.fontSize.docTitle * PT,
         fontWeight: spec.id === 'minimal' ? 500 : 700,
-        letterSpacing: spec.id === 'minimal' ? '0.075em' : '-0.02em',
+        letterSpacing: spec.id === 'minimal' ? '0.075em' : '0',
         textTransform: spec.id === 'minimal' ? 'uppercase' : 'none',
         color: spec.accent === 'text' ? accent : spec.header === 'band' ? onAccent(accent) : ink,
         lineHeight: 1,

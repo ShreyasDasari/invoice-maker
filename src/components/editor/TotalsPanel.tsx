@@ -233,7 +233,7 @@ export function TotalsPanel({
         </div>
 
         {/* Summary */}
-        <div className="flex flex-col gap-2 rounded-md border border-line bg-surface p-3.5">
+        <div className="glass glass-sheen flex flex-col gap-2 rounded-xl p-3.5">
           <SummaryRow term={t.fields.subtotal} amount={money(totals.subtotal)} />
 
           {totals.itemDiscountTotal !== ZERO ? (

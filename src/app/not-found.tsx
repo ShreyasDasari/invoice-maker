@@ -16,7 +16,7 @@ export default function NotFound() {
           The invoice editor is where you probably meant to go.
         </p>
         <Link
-          href="/"
+          href="/create"
           className="mt-6 inline-flex h-11 items-center rounded-md bg-primary px-5 text-sm font-medium text-primary-ink transition-colors hover:bg-primary-hover"
         >
           Create an invoice

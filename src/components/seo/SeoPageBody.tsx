@@ -65,8 +65,8 @@ export function SeoPageBody({ page }: { page: SeoPage }) {
 
       <div className="mt-7 flex flex-wrap items-center gap-3">
         <Link
-          href="/"
-          className="inline-flex h-11 items-center rounded-md bg-primary px-5 text-sm font-medium text-primary-ink transition-colors duration-150 hover:bg-primary-hover"
+          href="/create"
+          className="inline-flex h-11 items-center rounded-lg bg-primary px-5 text-sm font-semibold text-primary-ink transition-colors duration-150 hover:bg-primary-hover"
         >
           {t.nav.create}
         </Link>
@@ -108,14 +108,14 @@ export function SeoPageBody({ page }: { page: SeoPage }) {
         </dl>
       </section>
 
-      <div className="mt-12 flex flex-col items-start gap-3 rounded-md border border-line bg-surface p-6">
+      <div className="glass glass-sheen mt-12 flex flex-col items-start gap-3 rounded-xl p-6">
         <p className="text-[15px] font-medium text-ink">Ready when you are.</p>
         <p className="text-[13px] text-ink-muted">
           The editor opens with everything filled in. Change what is yours and take the PDF.
         </p>
         <Link
-          href="/"
-          className="mt-1 inline-flex h-10 items-center rounded-md bg-primary px-4 text-[13px] font-medium text-primary-ink transition-colors duration-150 hover:bg-primary-hover"
+          href="/create"
+          className="mt-1 inline-flex h-11 items-center rounded-lg bg-primary px-4 text-[13px] font-semibold text-primary-ink transition-colors duration-150 hover:bg-primary-hover"
         >
           {t.nav.create}
         </Link>

@@ -16,6 +16,9 @@ import { migrateInvoice } from './storage';
 /** Hash parameter carrying the payload: `#i=...`. */
 export const SHARE_PARAM = 'i';
 
+/** Share links open the editor directly, not the marketing home page. */
+export const SHARE_PATH = '/create';
+
 /** Browsers refuse very long URLs; past this we tell the user to send the PDF. */
 export const MAX_TOKEN_LENGTH = 16000;
 
@@ -121,7 +124,7 @@ export async function buildShareUrl(
 ): Promise<{ url: string; logoOmitted: boolean; tooLarge: boolean }> {
   const { token, logoOmitted, tooLarge } = await encodeInvoice(invoice);
   return {
-    url: `${origin.replace(/\/$/, '')}/#${SHARE_PARAM}=${token}`,
+    url: `${origin.replace(/\/$/, '')}${SHARE_PATH}#${SHARE_PARAM}=${token}`,
     logoOmitted,
     tooLarge,
   };

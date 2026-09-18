@@ -66,7 +66,7 @@ export function ActionBar({
   if (variant === 'fixed') {
     return (
       <div
-        className="no-print fixed inset-x-0 bottom-0 z-40 border-t border-line bg-canvas/95 backdrop-blur-sm lg:hidden"
+        className="no-print glass-bar fixed inset-x-0 bottom-0 z-40 border-t border-line/70 lg:hidden"
         // Keeps the bar clear of the home indicator and gesture area.
         style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
@@ -140,7 +140,7 @@ export function ActionBar({
             <div
               ref={menuRef}
               role="menu"
-              className="absolute right-0 top-full z-50 mt-1 w-56 overflow-hidden rounded-md border border-line bg-raised shadow-[var(--shadow-pop)] motion-safe:animate-[toast-in_150ms_var(--ease-out-quick)]"
+              className="glass-strong absolute right-0 top-full z-50 mt-1 w-56 overflow-hidden rounded-lg motion-safe:animate-[toast-in_150ms_var(--ease-out-quick)]"
             >
               <button
                 type="button"

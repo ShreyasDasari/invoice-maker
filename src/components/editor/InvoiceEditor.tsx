@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/Button';
 import { CheckIcon, EyeIcon, PencilIcon, PlusIcon } from '@/components/ui/Icons';
 import { InvoicePreview } from '@/components/preview/InvoicePreview';
 import { FitToPageMeasurer } from '@/components/preview/FitToPageMeasurer';
+import { PrintSheet } from '@/components/preview/PrintSheet';
 import { useInvoiceStore } from '@/state/invoice-store';
 import { useToast } from '@/components/ui/Toast';
 import { t } from '@/lib/i18n';
@@ -112,7 +113,7 @@ function EditorBody({
   return (
     <>
       {/* Mobile switch between the form and the document. */}
-      <div className="no-print sticky top-[var(--header-height)] z-30 border-b border-line bg-canvas/95 backdrop-blur-sm lg:hidden">
+      <div className="no-print glass-bar sticky top-[var(--header-height)] z-30 border-b border-line/70 lg:hidden">
         <div
           className="mx-auto flex max-w-[1600px] gap-1 px-4 py-2"
           role="tablist"
@@ -259,6 +260,16 @@ function EditorBody({
           </p>
         </div>
       </div>
+
+      {/* The copy that prints: a direct child of <body>, so no collapsed tab
+          panel or scrolling container can hide or clip it. */}
+      <PrintSheet
+        invoice={invoice}
+        totals={totals}
+        locale={locale}
+        dateStyle={dateStyle}
+        fitScale={fitScale}
+      />
 
       {/* Measured only while the option is on, so nothing is laid out twice
           for the invoices that do not need it. */}
