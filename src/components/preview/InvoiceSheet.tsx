@@ -21,6 +21,7 @@ import { getCurrency } from '@/lib/currency';
 import { ZERO, parseDec } from '@/lib/money';
 import { getPaper, getTemplate, onAccent, safeHex, scaleTemplate, tint } from '@/lib/templates';
 import { getFont } from '@/lib/fonts';
+import { LOGO_MAX_HEIGHT, LOGO_MAX_WIDTH, logoBox } from '@/lib/logo';
 
 /** PDF points to CSS pixels at 96dpi. */
 const PT = 96 / 72;
@@ -126,12 +127,25 @@ export function InvoiceSheet({
 
   // --- Masthead -------------------------------------------------------------
 
+  // The same measured box the PDF uses, converted to pixels, so the logo sits
+  // in exactly the same place in both.
+  const logoSize = logoBox(invoice.business.logo);
+
   const logo = invoice.business.logo ? (
     // eslint-disable-next-line @next/next/no-img-element -- a user data URL, not an optimisable asset
     <img
       src={invoice.business.logo}
       alt={`${value(invoice.business.name, PLACEHOLDERS.businessName)} logo`}
-      style={{ maxHeight: 54 * PT, maxWidth: 190 * PT, objectFit: 'contain', display: 'block' }}
+      style={
+        logoSize
+          ? { width: logoSize.width * PT, height: logoSize.height * PT, display: 'block' }
+          : {
+              maxHeight: LOGO_MAX_HEIGHT * PT,
+              maxWidth: LOGO_MAX_WIDTH * PT,
+              objectFit: 'contain',
+              display: 'block',
+            }
+      }
     />
   ) : null;
 

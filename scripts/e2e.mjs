@@ -675,6 +675,121 @@ for (const [label, device] of [['iPhone 13', devices['iPhone 13']], ['Pixel 7', 
   await context.close();
 }
 
+// ------------------------------------------- logo: preview must match the PDF
+{
+  const { deflateSync } = await import('node:zlib');
+
+  /** A real RGBA PNG, which is what an exported brand asset looks like. */
+  const makePng = (width, height) => {
+    const table = [];
+    for (let n = 0; n < 256; n += 1) {
+      let c = n;
+      for (let k = 0; k < 8; k += 1) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
+      table[n] = c >>> 0;
+    }
+    const chunk = (type, data) => {
+      const body = Buffer.concat([Buffer.from(type, 'latin1'), data]);
+      const len = Buffer.alloc(4);
+      len.writeUInt32BE(data.length);
+      let crc = 0xffffffff;
+      for (const b of body) crc = table[(crc ^ b) & 0xff] ^ (crc >>> 8);
+      const crcBuf = Buffer.alloc(4);
+      crcBuf.writeUInt32BE((crc ^ 0xffffffff) >>> 0);
+      return Buffer.concat([len, body, crcBuf]);
+    };
+    const ihdr = Buffer.alloc(13);
+    ihdr.writeUInt32BE(width, 0);
+    ihdr.writeUInt32BE(height, 4);
+    ihdr[8] = 8;
+    ihdr[9] = 6;
+    const raw = Buffer.concat(
+      Array.from({ length: height }, () =>
+        Buffer.concat([Buffer.from([0]), Buffer.alloc(width * 4, 90)])),
+    );
+    const data = Buffer.concat([
+      Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+      chunk('IHDR', ihdr), chunk('IDAT', deflateSync(raw)), chunk('IEND', Buffer.alloc(0)),
+    ]);
+    return `data:image/png;base64,${data.toString('base64')}`;
+  };
+
+  const matmul = (m, n) => [
+    m[0] * n[0] + m[2] * n[1], m[1] * n[0] + m[3] * n[1],
+    m[0] * n[2] + m[2] * n[3], m[1] * n[2] + m[3] * n[3],
+    m[0] * n[4] + m[2] * n[5] + m[4], m[1] * n[4] + m[3] * n[5] + m[5],
+  ];
+
+  // 600x200 is the shape that exposed the bug: narrower than the maximum box,
+  // so the renderer centred it and the logo drifted right of the name.
+  for (const [label, w, h] of [['wordmark', 600, 200], ['square', 400, 400]]) {
+    const context = await browser.newContext({ viewport: { width: 1440, height: 1000 }, acceptDownloads: true });
+    const page = await context.newPage();
+    await page.goto(`${BASE}/create`, { waitUntil: 'networkidle' });
+    await page.waitForTimeout(600);
+
+    await page.evaluate((logo) => {
+      const raw = window.localStorage.getItem('im.draft.v1');
+      const draft = raw ? JSON.parse(raw) : null;
+      if (!draft) return;
+      draft.business.name = 'Northwind Studio';
+      draft.business.logo = logo;
+      draft.items = [{
+        id: 'l1', description: 'Work', quantity: '1', unitPrice: '100',
+        tax: { mode: 'percent', value: '' }, discount: { mode: 'percent', value: '' },
+      }];
+      window.localStorage.setItem('im.draft.v1', JSON.stringify(draft));
+    }, makePng(w, h));
+    await page.reload({ waitUntil: 'networkidle' });
+    await page.waitForTimeout(900);
+
+    // Where the preview puts the logo, relative to the business name.
+    const preview = await page.evaluate(() => {
+      const sheet = document.querySelector('.preview-root article.sheet');
+      const img = sheet?.querySelector('img');
+      const name = [...(sheet?.querySelectorAll('div') ?? [])].find(
+        (el) => el.textContent?.trim() === 'Northwind Studio');
+      if (!img || !name) return null;
+      const scale = img.getBoundingClientRect().width / img.offsetWidth;
+      return {
+        offset: (img.getBoundingClientRect().left - name.getBoundingClientRect().left) / (scale || 1),
+      };
+    });
+    check(`${label} logo sits flush with the name in the preview`,
+      preview !== null && Math.abs(preview.offset) < 1.5,
+      preview ? `${preview.offset.toFixed(2)}px` : 'not found');
+
+    // And where the PDF puts it.
+    const dl = page.waitForEvent('download', { timeout: 60000 });
+    await page.getByRole('button', { name: 'Download PDF' }).click();
+    const file = `${OUT}/logo-${label}.pdf`;
+    await (await dl).saveAs(file);
+
+    const pdfjs = await import('pdfjs-dist/legacy/build/pdf.mjs');
+    const { readFileSync } = await import('node:fs');
+    const doc = await pdfjs.getDocument({ data: new Uint8Array(readFileSync(file)), useSystemFonts: true }).promise;
+    const pdfPage = await doc.getPage(1);
+    const content = await pdfPage.getTextContent();
+    const nameItem = content.items.find((i) => 'str' in i && i.str.includes('Northwind'));
+    const ops = await pdfPage.getOperatorList();
+    let ctm = [1, 0, 0, 1, 0, 0];
+    const stack = [];
+    let logoX = null;
+    for (let i = 0; i < ops.fnArray.length; i += 1) {
+      const fn = ops.fnArray[i];
+      if (fn === pdfjs.OPS.save) stack.push([...ctm]);
+      else if (fn === pdfjs.OPS.restore) ctm = stack.pop() ?? [1, 0, 0, 1, 0, 0];
+      else if (fn === pdfjs.OPS.transform) ctm = matmul(ctm, ops.argsArray[i]);
+      else if (fn === pdfjs.OPS.paintImageXObject && logoX === null) logoX = ctm[4];
+    }
+    const indent = logoX !== null && nameItem ? logoX - nameItem.transform[4] : null;
+    check(`${label} logo sits flush with the name in the PDF`,
+      indent !== null && Math.abs(indent) < 0.5,
+      indent === null ? 'not found' : `${indent.toFixed(2)}pt`);
+
+    await context.close();
+  }
+}
+
 // --------------------------------------------------- button + alignment audit
 for (const route of ['/', '/create', '/templates', '/recent', '/invoice-maker']) {
   const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });

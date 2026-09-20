@@ -37,6 +37,7 @@ import {
 import { getCurrency } from '@/lib/currency';
 import { ZERO, parseDec } from '@/lib/money';
 import { getPaper, getTemplate, onAccent, safeHex, scaleTemplate, tint } from '@/lib/templates';
+import { LOGO_MAX_HEIGHT, LOGO_MAX_WIDTH, logoBox } from '@/lib/logo';
 import { getFont, resolveWeight } from '@/lib/fonts';
 import { registerPdfFonts } from '@/lib/pdf-fonts';
 
@@ -81,6 +82,13 @@ export function InvoiceDocument({
    * a PDF reader starts emitting one glyph at a time.
    */
   const track = (size: number, ratio = 0.055) => size * ratio;
+
+  /**
+   * The logo's exact box, measured from the file itself. Given only maxima,
+   * this renderer lays the box out at the full maximum width and centres the
+   * picture in it, which pushed the logo right of the business name.
+   */
+  const logo = logoBox(invoice.business.logo);
 
   const regular = { fontFamily: font.family, fontWeight: 400 as const };
   const semibold = { fontFamily: font.family, fontWeight: resolveWeight(font, 600) };
@@ -243,18 +251,18 @@ export function InvoiceDocument({
       {invoice.business.logo ? (
         <Image
           src={invoice.business.logo}
-          style={{
-            maxHeight: 54,
-            maxWidth: 180,
-            marginBottom: 8,
-            objectFit: 'contain',
-            // Without this the image box stretches to the full column width
-            // (alignItems defaults to stretch) and objectFit centres the
-            // picture inside it, pushing a tall or square logo up to 40pt to
-            // the right of the business name. The preview does not do that, so
-            // the download stopped matching it.
-            alignSelf: 'flex-start',
-          }}
+          style={
+            logo
+              ? { width: logo.width, height: logo.height, marginBottom: 8, alignSelf: 'flex-start' }
+              : {
+                  // Only when the dimensions could not be read.
+                  maxHeight: LOGO_MAX_HEIGHT,
+                  maxWidth: LOGO_MAX_WIDTH,
+                  marginBottom: 8,
+                  objectFit: 'contain',
+                  alignSelf: 'flex-start',
+                }
+          }
         />
       ) : null}
       <Text style={[s.partyName, { fontSize: spec.fontSize.body + 2.5 }]}>

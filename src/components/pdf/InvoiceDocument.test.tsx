@@ -10,6 +10,7 @@ import {
   type TemplateId,
 } from '@/lib/invoice';
 import { MIN_FIT_SCALE } from '@/lib/templates';
+import { logoBox } from '@/lib/logo';
 
 /**
  * PDF verification.
@@ -95,6 +96,166 @@ function build(items: Partial<LineItem>[], overrides: Partial<Invoice> = {}): In
 const ONE_ITEM: Partial<LineItem>[] = [
   { description: 'Brand identity design', quantity: '1', unitPrice: '4800' },
 ];
+
+/** A real PNG of a given size; RGBA by default, as exported brand assets are. */
+function makePng(width: number, height: number, rgba = true): string {
+  const table: number[] = [];
+  for (let n = 0; n < 256; n += 1) {
+    let c = n;
+    for (let k = 0; k < 8; k += 1) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
+    table[n] = c >>> 0;
+  }
+  const chunk = (type: string, data: Buffer) => {
+    const body = Buffer.concat([Buffer.from(type, 'latin1'), data]);
+    const len = Buffer.alloc(4);
+    len.writeUInt32BE(data.length);
+    let crc = 0xffffffff;
+    for (const b of body) crc = table[(crc ^ b) & 0xff]! ^ (crc >>> 8);
+    const crcBuf = Buffer.alloc(4);
+    crcBuf.writeUInt32BE((crc ^ 0xffffffff) >>> 0);
+    return Buffer.concat([len, body, crcBuf]);
+  };
+  const channels = rgba ? 4 : 3;
+  const ihdr = Buffer.alloc(13);
+  ihdr.writeUInt32BE(width, 0);
+  ihdr.writeUInt32BE(height, 4);
+  ihdr[8] = 8;
+  ihdr[9] = rgba ? 6 : 2;
+  const raw = Buffer.concat(
+    Array.from({ length: height }, () =>
+      Buffer.concat([Buffer.from([0]), Buffer.alloc(width * channels, 90)]),
+    ),
+  );
+  const data = Buffer.concat([
+    Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+    chunk('IHDR', ihdr),
+    chunk('IDAT', zlibDeflate(raw)),
+    chunk('IEND', Buffer.alloc(0)),
+  ]);
+  return `data:image/png;base64,${data.toString('base64')}`;
+}
+
+function zlibDeflate(buffer: Buffer): Buffer {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  return require('node:zlib').deflateSync(buffer);
+}
+
+/** Multiply two PDF transformation matrices. */
+function matmul(m: number[], n: number[]): number[] {
+  return [
+    m[0]! * n[0]! + m[2]! * n[1]!,
+    m[1]! * n[0]! + m[3]! * n[1]!,
+    m[0]! * n[2]! + m[2]! * n[3]!,
+    m[1]! * n[2]! + m[3]! * n[3]!,
+    m[0]! * n[4]! + m[2]! * n[5]! + m[4]!,
+    m[1]! * n[4]! + m[3]! * n[5]! + m[5]!,
+  ];
+}
+
+/**
+ * Where the logo actually lands on the page, and how wide it is.
+ *
+ * The placement has to be read off the accumulated graphics matrix — the
+ * transform beside the paint operator alone is relative and always reports
+ * zero, which is what hid this bug the first time.
+ */
+async function logoPlacement(invoice: Invoice) {
+  const buffer = await renderToBuffer(
+    <InvoiceDocument
+      invoice={invoice}
+      totals={computeTotals(invoice)}
+      locale="en-US"
+      dateStyle="iso"
+    />,
+  );
+  const doc = await pdfjs.getDocument({ data: new Uint8Array(buffer), useSystemFonts: true }).promise;
+  const page = await doc.getPage(1);
+
+  const content = await page.getTextContent();
+  const name = content.items.find(
+    (item) => 'str' in item && item.str.includes(invoice.business.name.split(' ')[0]!),
+  ) as { transform: number[] } | undefined;
+
+  const ops = await page.getOperatorList();
+  let ctm = [1, 0, 0, 1, 0, 0];
+  const stack: number[][] = [];
+  let x: number | null = null;
+  let width: number | null = null;
+  for (let i = 0; i < ops.fnArray.length; i += 1) {
+    const fn = ops.fnArray[i];
+    if (fn === pdfjs.OPS.save) stack.push([...ctm]);
+    else if (fn === pdfjs.OPS.restore) ctm = stack.pop() ?? [1, 0, 0, 1, 0, 0];
+    else if (fn === pdfjs.OPS.transform) ctm = matmul(ctm, ops.argsArray[i] as number[]);
+    else if (fn === pdfjs.OPS.paintImageXObject && x === null) {
+      x = ctm[4]!;
+      width = ctm[0]!;
+    }
+  }
+
+  return { logoX: x, logoWidth: width, textX: name?.transform[4] ?? null };
+}
+
+describe('logo placement', () => {
+  /*
+   * The reported bug: the logo sat several points right of the business name in
+   * the download while sitting flush in the preview. Given only maximum
+   * dimensions, react-pdf lays the image box out at the full maximum width and
+   * `objectFit: contain` centres the picture inside it, so anything narrower
+   * than the maximum drifts right by half the slack. An opaque test image whose
+   * aspect happened to fill the box exactly showed no drift, which is why the
+   * first fix looked like it worked.
+   */
+  const shapes: [string, number, number][] = [
+    ['wordmark 600x200', 600, 200],
+    ['wide 1200x200', 1200, 200],
+    ['square 400x400', 400, 400],
+    ['tall 200x500', 200, 500],
+    ['small 120x48', 120, 48],
+  ];
+
+  for (const template of ['classic', 'modern', 'minimal'] as TemplateId[]) {
+    for (const [label, w, h] of shapes) {
+      it(`aligns a ${label} logo with the business name (${template})`, async () => {
+        const base = createInvoice({ today: '2026-03-09' });
+        const invoice: Invoice = {
+          ...base,
+          template,
+          business: { ...base.business, name: 'Northwind Studio', logo: makePng(w, h) },
+          customer: { ...base.customer, name: 'Acme Corporation' },
+          items: [createLineItem({ description: 'Work', quantity: '1', unitPrice: '100' })],
+        };
+
+        const { logoX, logoWidth, textX } = await logoPlacement(invoice);
+        expect(logoX, 'logo should be placed').not.toBeNull();
+        expect(textX, 'business name should be placed').not.toBeNull();
+        expect(
+          Math.abs(logoX! - textX!),
+          `logo at ${logoX?.toFixed(1)}pt, name at ${textX?.toFixed(1)}pt`,
+        ).toBeLessThan(0.5);
+
+        // And the box is exactly the size both renderers computed, so there is
+        // no slack for anything to be centred in.
+        const expected = logoBox(invoice.business.logo);
+        expect(logoWidth).toBeCloseTo(expected!.width, 1);
+      });
+    }
+  }
+
+  it('still places a logo whose dimensions cannot be read', async () => {
+    const base = createInvoice({ today: '2026-03-09' });
+    const invoice: Invoice = {
+      ...base,
+      business: { ...base.business, name: 'Northwind Studio', logo: 'data:image/png;base64,AAAA' },
+      items: [createLineItem({ description: 'Work', quantity: '1', unitPrice: '100' })],
+    };
+    // Unreadable dimensions must not throw; the invoice still renders.
+    const totals = computeTotals(invoice);
+    const buffer = await renderToBuffer(
+      <InvoiceDocument invoice={invoice} totals={totals} locale="en-US" dateStyle="iso" />,
+    );
+    expect(buffer.length).toBeGreaterThan(1000);
+  });
+});
 
 describe('PDF output', () => {
   it('produces selectable text, not an image of the invoice', async () => {
