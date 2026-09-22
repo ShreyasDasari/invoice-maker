@@ -1,0 +1,94 @@
+{
+  "url": "http://localhost:3311",
+  "steps": [
+    {
+      "action": "goto",
+      "args": [
+        "/create"
+      ],
+      "raw": "goto /create"
+    },
+    {
+      "action": "wait",
+      "args": [
+        "[placeholder^=Your]"
+      ],
+      "raw": "wait [placeholder^=Your]"
+    },
+    {
+      "action": "fill",
+      "args": [
+        "[placeholder^=Your]",
+        "Northwind",
+        "Studio"
+      ],
+      "raw": "fill [placeholder^=Your] Northwind Studio"
+    },
+    {
+      "action": "fill",
+      "args": [
+        "[placeholder^=Customer]",
+        "Acme",
+        "Corporation"
+      ],
+      "raw": "fill [placeholder^=Customer] Acme Corporation"
+    },
+    {
+      "action": "fill",
+      "args": [
+        "[id^=desc-lg-]",
+        "Brand",
+        "identity",
+        "design"
+      ],
+      "raw": "fill [id^=desc-lg-] Brand identity design"
+    },
+    {
+      "action": "fill",
+      "args": [
+        ":nth-match([placeholder=\"1\"],1)",
+        "2"
+      ],
+      "raw": "fill :nth-match([placeholder=\"1\"],1) 2"
+    },
+    {
+      "action": "fill",
+      "args": [
+        ":nth-match([placeholder=\"0.00\"],1)",
+        "1500"
+      ],
+      "raw": "fill :nth-match([placeholder=\"0.00\"],1) 1500"
+    },
+    {
+      "action": "pause",
+      "args": [
+        "1200"
+      ],
+      "raw": "pause 1200"
+    },
+    {
+      "action": "click",
+      "args": [
+        "[role=radiogroup][aria-label^=Template]>[role=radio]:nth-child(2)"
+      ],
+      "raw": "click [role=radiogroup][aria-label^=Template]>[role=radio]:nth-child(2)"
+    },
+    {
+      "action": "pause",
+      "args": [
+        "1600"
+      ],
+      "raw": "pause 1600"
+    }
+  ],
+  "viewport": {
+    "width": 1280,
+    "height": 720
+  },
+  "pauseMs": 900,
+  "colorScheme": "light",
+  "videoDir": "demo/.evergif-video",
+  "videoPath": "demo/evergif.webm",
+  "transcriptPath": "demo/evergif.transcript.txt",
+  "serve": "npm run build && npm start -- -p 3311"
+}

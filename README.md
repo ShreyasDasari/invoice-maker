@@ -3,6 +3,10 @@
 A free invoice maker. Open the site, type, download a PDF. No account, no
 watermark, no paywall.
 
+<!-- evergif:start -->
+![The editor at /create: typing a business name, a customer and one line item fills a live invoice preview beside the form, totalling $3,000.00, then switching the template to Modern redraws the same invoice](demo/evergif.gif)
+<!-- evergif:end -->
+
 The home page shows the finished invoice before asking for anything, because
 that is the question a first-time visitor actually has: *what will I end up
 with*. The editor is one click away at `/create` and still needs no account.

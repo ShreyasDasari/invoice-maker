@@ -13,3 +13,4 @@ next-env.d.ts
 coverage/
 .e2e-output/
 tsconfig.tsbuildinfo
+brag-output/
