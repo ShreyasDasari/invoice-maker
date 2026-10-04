@@ -38,8 +38,7 @@ export function LandingHero() {
           </h1>
 
           <p className="mt-4 max-w-md text-[15px] leading-relaxed text-ink-muted sm:text-base">
-            A professional, print-ready invoice in about a minute. Fill in your details, watch it
-            build beside you, download the PDF. Nothing to install, nothing to sign up for.
+            Fill in your details and download a PDF. It takes about a minute.
           </p>
 
           <ul className="mt-6 flex flex-wrap gap-x-5 gap-y-2">
