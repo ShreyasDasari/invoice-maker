@@ -39,6 +39,8 @@ export interface BlogPost {
   faqs: readonly BlogFaq[];
   /** Slugs of other posts to suggest at the end. */
   related: readonly string[];
+  /** Show the animated editor walk-through under the intro. */
+  demo?: boolean;
 }
 
 const DISCLAIMER =
@@ -55,6 +57,7 @@ export const BLOG_POSTS: readonly BlogPost[] = [
       'Seven steps from a blank page to an invoice your customer can pay, plus what changes if you bill in the US, the UK or India.',
     publishedAt: '2026-10-06',
     updatedAt: '2026-10-06',
+    demo: true,
     sections: [
       {
         heading: 'What an invoice is',

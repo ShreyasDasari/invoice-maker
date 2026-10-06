@@ -3,6 +3,7 @@ import type { BlogPost } from '@/lib/blog-posts';
 import { formatPostDate, getBlogPost } from '@/lib/blog-posts';
 import { SITE, absoluteUrl } from '@/lib/site';
 import { ChevronRightIcon } from '@/components/ui/Icons';
+import { InvoiceDemo } from './InvoiceDemo';
 import { t } from '@/lib/i18n';
 
 /**
@@ -93,6 +94,12 @@ export function BlogPostBody({ post }: { post: BlogPost }) {
         {post.updatedAt === post.publishedAt ? 'Published ' : 'Updated '}
         <time dateTime={post.updatedAt}>{formatPostDate(post.updatedAt)}</time>
       </p>
+
+      {post.demo ? (
+        <div className="mt-8">
+          <InvoiceDemo />
+        </div>
+      ) : null}
 
       <div className="mt-10 flex flex-col gap-10">
         {post.sections.map((section) => (

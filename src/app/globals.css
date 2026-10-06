@@ -456,3 +456,19 @@
     opacity: 0.28;
   }
 }
+
+/* The text cursor in the editor demo. A step, not a fade, like a real caret. */
+@keyframes demo-caret-blink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+.demo-caret {
+  animation: demo-caret-blink 1s steps(1) infinite;
+}
