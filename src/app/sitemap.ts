@@ -1,12 +1,13 @@
 import type { MetadataRoute } from 'next';
 import { absoluteUrl } from '@/lib/site';
 import { SEO_PAGES } from '@/lib/seo-pages';
+import { BLOG_POSTS } from '@/lib/blog-posts';
 
 /**
  * sitemap.xml
  *
  * The home page, the editor, the template gallery, the landing pages that
- * answer a search, and the privacy page. Pages that only make sense with local data (recent invoices) are left
+ * answer a search, the blog and its posts, and the privacy page. Pages that only make sense with local data (recent invoices) are left
  * out: there is nothing there for a crawler to index.
  */
 export default function sitemap(): MetadataRoute.Sitemap {
@@ -36,6 +37,18 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified,
       changeFrequency: 'monthly' as const,
       priority: page.priority,
+    })),
+    {
+      url: absoluteUrl('/blog'),
+      lastModified,
+      changeFrequency: 'weekly',
+      priority: 0.6,
+    },
+    ...BLOG_POSTS.map((post) => ({
+      url: absoluteUrl(`/blog/${post.slug}`),
+      lastModified: new Date(`${post.updatedAt}T00:00:00Z`),
+      changeFrequency: 'monthly' as const,
+      priority: 0.6,
     })),
     {
       url: absoluteUrl('/privacy'),
