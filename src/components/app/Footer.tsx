@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { SEO_PAGES } from '@/lib/seo-pages';
 import { t } from '@/lib/i18n';
 
-/** A quiet footer: the trust line, the landing pages and privacy. */
+/** A quiet footer: the trust line, the landing pages, the blog and privacy. */
 export function Footer() {
   return (
     <footer className="app-footer no-print border-t border-line">
@@ -29,6 +29,14 @@ export function Footer() {
                 </Link>
               </li>
             ))}
+            <li>
+              <Link
+                href="/blog"
+                className="inline-flex min-h-11 items-center text-[12px] text-ink-muted underline-offset-2 transition-colors hover:text-ink hover:underline sm:min-h-0"
+              >
+                Blog
+              </Link>
+            </li>
             <li>
               <Link
                 href="/privacy"
