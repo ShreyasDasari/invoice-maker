@@ -37,6 +37,9 @@ export const SITE = {
     'freelance invoice maker',
     'invoice maker online free',
     'make an invoice',
+    'create invoice online',
+    'make invoice online',
+    'create invoice online free uk',
   ],
   locale: 'en_US',
 } as const;
