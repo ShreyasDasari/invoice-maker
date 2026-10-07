@@ -41,7 +41,7 @@ import { isValidHex, safeHex } from '@/lib/templates';
 import { FONT_CHOICES } from '@/lib/fonts';
 import { computeTotals, type InvoiceTotals } from '@/lib/calc';
 import { toFixed } from '@/lib/money';
-import { currencyDecimals } from '@/lib/currency';
+import { CURRENCIES, currencyDecimals } from '@/lib/currency';
 import { dateStyleForLocale, type DateFormatId } from '@/lib/format';
 import { nextFromHistory } from '@/lib/numbering';
 import {
@@ -252,7 +252,9 @@ export function InvoiceStoreProvider({ children }: { children: ReactNode }) {
 
       if (!restored) restored = loadDraft();
 
+      let freshDraft = false;
       if (!restored) {
+        freshDraft = true;
         const usedNumbers = savedRecent.map((entry) => entry.invoiceNumber);
         restored = createInvoice({
           today: todayISO(),
@@ -276,12 +278,19 @@ export function InvoiceStoreProvider({ children }: { children: ReactNode }) {
        * A design chosen on the templates page arrives as query parameters.
        * It only ever touches the look of the invoice — never its contents — so
        * arriving from the gallery restyles the draft rather than replacing it.
+       * The one exception is `currency`, from a country landing page: it is
+       * applied only to a draft created on this visit, never to one restored.
        */
       if (typeof window !== 'undefined') {
         const params = new URLSearchParams(window.location.search);
         const template = params.get('template');
         const accent = params.get('accent');
         const font = params.get('font');
+        const currency = params.get('currency')?.toUpperCase();
+
+        if (freshDraft && currency && CURRENCIES.some((entry) => entry.code === currency)) {
+          restored = { ...restored, currency };
+        }
 
         if (template && (TEMPLATE_IDS as readonly string[]).includes(template)) {
           restored = { ...restored, template: template as Invoice['template'] };
@@ -301,7 +310,7 @@ export function InvoiceStoreProvider({ children }: { children: ReactNode }) {
 
         // Clear them so a refresh does not re-apply a choice the user has since
         // changed in the editor.
-        if (template || accent || font) {
+        if (template || accent || font || currency) {
           window.history.replaceState(null, '', window.location.pathname);
         }
       }

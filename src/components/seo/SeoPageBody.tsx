@@ -65,7 +65,7 @@ export function SeoPageBody({ page }: { page: SeoPage }) {
 
       <div className="mt-7 flex flex-wrap items-center gap-3">
         <Link
-          href="/create"
+          href={page.ctaHref ?? '/create'}
           className="inline-flex h-11 items-center rounded-lg bg-primary px-5 text-sm font-semibold text-primary-ink transition-colors duration-150 hover:bg-primary-hover"
         >
           {t.nav.create}
@@ -114,7 +114,7 @@ export function SeoPageBody({ page }: { page: SeoPage }) {
           The editor opens with everything filled in. Change what is yours and take the PDF.
         </p>
         <Link
-          href="/create"
+          href={page.ctaHref ?? '/create'}
           className="mt-1 inline-flex h-11 items-center rounded-lg bg-primary px-4 text-[13px] font-semibold text-primary-ink transition-colors duration-150 hover:bg-primary-hover"
         >
           {t.nav.create}

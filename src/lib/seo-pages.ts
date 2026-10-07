@@ -31,6 +31,8 @@ export interface SeoPage {
   faqs: readonly SeoFaq[];
   /** Sitemap weighting, 0-1. */
   priority: number;
+  /** Where the call to action opens. Defaults to the editor with no presets. */
+  ctaHref?: string;
 }
 
 const FREE_ANSWER =
@@ -172,6 +174,113 @@ export const SEO_PAGES: readonly SeoPage[] = [
       { question: 'Is it free?', answer: FREE_ANSWER },
     ],
     priority: 0.8,
+  },
+  {
+    slug: 'create-invoice-online',
+    title: 'Create an Invoice Online — Make Your Own Invoice Free',
+    description:
+      'Create your own invoice online in a few minutes. Type your details, see the invoice build as you go, download the PDF. Free, no signup, no watermark.',
+    h1: 'Create an invoice online',
+    intro:
+      'Make your own invoice without a template to wrestle or software to install. Type your details, watch the invoice take shape beside you, download the PDF.',
+    sections: [
+      {
+        heading: 'Create an invoice in four steps',
+        body: 'The editor opens already laid out as a finished invoice, so creating one is a matter of replacing the placeholder details with yours.',
+        points: [
+          'Add your business name and contact details. They are remembered on this device for next time.',
+          'Add the customer: their name, address and the email the invoice should reach.',
+          'List the work, one line per item, with a quantity and a rate. Amounts and totals calculate as you type.',
+          'Set tax if you charge it, pick a payment term, and download the PDF.',
+        ],
+      },
+      {
+        heading: 'Making your own invoice versus a spreadsheet',
+        body: 'A spreadsheet works until it does not: totals that stop adding up after a row is deleted, a logo that stretches, a date that turns into a number. Here the layout is fixed, the maths is exact, and the file your customer opens is a PDF that looks the same on every screen.',
+      },
+      {
+        heading: 'Create invoices again without starting over',
+        body: 'Most people make more than one invoice. Your business details and logo are kept on your device, the next invoice number follows on from the last, and recent invoices are a tap away, so the second invoice takes a fraction of the time of the first.',
+      },
+      {
+        heading: 'What you can change',
+        body: 'Three templates, any accent colour, a serif, sans-serif or monospace typeface, A4 or US Letter, and any of the supported currencies. Tax and discounts can be a single rate or set per line.',
+      },
+    ],
+    faqs: [
+      { question: 'Is it free to create an invoice here?', answer: FREE_ANSWER },
+      {
+        question: 'Do I need to download anything?',
+        answer: 'No. It runs in your browser on a phone, tablet or computer, and the only download is the finished PDF.',
+      },
+      {
+        question: 'Can I create an invoice without a business name?',
+        answer:
+          'Yes. Freelancers and sole traders can invoice under their own name. Only add a tax registration number if you are registered for a tax such as VAT or GST.',
+      },
+      { question: 'Where is my invoice stored?', answer: PRIVACY_ANSWER },
+    ],
+    priority: 0.85,
+  },
+  {
+    slug: 'create-invoice-online-free-uk',
+    title: 'Create an Invoice Online Free (UK) — Pounds, VAT Ready',
+    description:
+      'Create a UK invoice online for free. Pounds sterling by default, UK date format, a VAT line and VAT number when you need them. No signup, no watermark.',
+    h1: 'Create an invoice online free, for the UK',
+    intro:
+      'Pounds sterling by default, dates the UK way, and a VAT line you can switch on if you are registered. Free, with no account and no watermark.',
+    sections: [
+      {
+        heading: 'Set up for UK invoicing',
+        body: 'Start from the button above and the invoice opens in GBP. Dates follow your browser, so a UK visitor sees day, month, year. Everything else is the same quick editor.',
+        points: [
+          'Currency: £ by default from this page, and switchable if you bill abroad.',
+          'Tax: rename the tax line to "VAT" and set 20%, 5% or 0% as needed, or leave it off entirely.',
+          'Tax ID: rename the field to "VAT No." so your registration number is labelled correctly.',
+          'Paper: A4 is the default size.',
+        ],
+      },
+      {
+        heading: 'What a UK invoice needs',
+        body: 'For a sole trader or a company that is not VAT registered, an invoice is straightforward. It should carry:',
+        points: [
+          'A unique invoice number.',
+          'Your business name, address and contact details. Sole traders trading under a business name should include their own name too; limited companies should use the full registered name.',
+          'The customer’s name and address.',
+          'A clear description of what you supplied, with the date of supply.',
+          'The amount for each item and the total due, with the due date and how to pay.',
+        ],
+      },
+      {
+        heading: 'If you are VAT registered',
+        body: 'Only charge VAT if you are registered. Registration is compulsory once taxable turnover passes £90,000 in a rolling 12 months. A VAT invoice also needs your VAT number, the tax point, the VAT rate for each item, the total excluding VAT and the total VAT. For sales of £250 or less including VAT, a simplified VAT invoice is allowed.',
+      },
+      {
+        heading: 'Getting paid on time in the UK',
+        body: 'Put a due date on every invoice. Between businesses, the Late Payment of Commercial Debts (Interest) Act lets you claim statutory interest at 8% over the Bank of England base rate on overdue invoices, plus a fixed recovery sum, even if your contract does not mention it. A line in the notes saying so tends to make it unnecessary.',
+      },
+      {
+        heading: 'A note on the rules',
+        body: 'This page is general information, not tax or legal advice. HMRC publishes the current invoicing and VAT rules on GOV.UK; check there or with an accountant before relying on any of it.',
+      },
+    ],
+    faqs: [
+      { question: 'Is it really free to create an invoice in the UK?', answer: FREE_ANSWER },
+      {
+        question: 'Does the invoice use pounds?',
+        answer:
+          'Yes. Opening the editor from this page sets the currency to GBP. You can change it for a customer abroad.',
+      },
+      {
+        question: 'Can I add VAT?',
+        answer:
+          'Yes. Set the tax rate, rename the line to VAT, and rename the tax ID field to "VAT No." for your registration number. Leave it off if you are not registered.',
+      },
+      { question: 'Is my data kept in the UK?', answer: PRIVACY_ANSWER },
+    ],
+    priority: 0.85,
+    ctaHref: '/create?currency=GBP',
   },
   {
     slug: 'invoice-template',
