@@ -18,7 +18,7 @@ export function getSiteUrl(): string {
 export const SITE = {
   name: 'Invoice Maker',
   shortName: 'Invoice Maker',
-  title: 'Free Invoice Maker — Create an Invoice Online',
+  title: 'Free Invoice Maker: Create an Invoice Online',
   description:
     'Create a professional invoice in seconds and download it as a PDF. Free, no signup, no watermark. Works on mobile and desktop.',
   /** High-intent search terms this tool should answer. */

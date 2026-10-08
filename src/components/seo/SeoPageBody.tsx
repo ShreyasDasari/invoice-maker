@@ -109,7 +109,7 @@ export function SeoPageBody({ page }: { page: SeoPage }) {
       </section>
 
       <div className="glass glass-sheen mt-12 flex flex-col items-start gap-3 rounded-xl p-6">
-        <p className="text-[15px] font-medium text-ink">Ready when you are.</p>
+        <p className="text-[15px] font-medium text-ink">Make your invoice.</p>
         <p className="text-[13px] text-ink-muted">
           The editor opens with everything filled in. Change what is yours and take the PDF.
         </p>

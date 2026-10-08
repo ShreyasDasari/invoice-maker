@@ -46,7 +46,7 @@ export const FONT_CHOICES: readonly FontChoice[] = [
   {
     id: 'sans',
     name: 'Sans',
-    description: 'Inter — neutral and modern',
+    description: 'Neutral and modern',
     family: 'Inter',
     /*
      * References the interface font loaded by next/font rather than fetching a
@@ -65,7 +65,7 @@ export const FONT_CHOICES: readonly FontChoice[] = [
   {
     id: 'serif',
     name: 'Serif',
-    description: 'Source Serif — traditional and formal',
+    description: 'Traditional and formal',
     family: 'Source Serif 4',
     css: "'Source Serif 4', 'Source Serif Pro', Georgia, 'Times New Roman', serif",
     files: [
@@ -77,7 +77,7 @@ export const FONT_CHOICES: readonly FontChoice[] = [
   {
     id: 'mono',
     name: 'Mono',
-    description: 'JetBrains Mono — fixed width, technical',
+    description: 'Fixed width, technical',
     family: 'JetBrains Mono',
     css: "'JetBrains Mono', 'SF Mono', Menlo, Consolas, monospace",
     files: [

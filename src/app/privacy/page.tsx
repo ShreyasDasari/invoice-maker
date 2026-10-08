@@ -44,7 +44,7 @@ export default function PrivacyPage() {
           </h2>
           <p className="mt-2 text-[14px] leading-relaxed text-ink-muted">
             So that a second invoice takes seconds rather than minutes, the following is kept in
-            this browser&apos;s local storage — on your own device, readable by nothing but this
+            this browser&apos;s local storage, on your own device, readable by nothing but this
             site:
           </p>
           <ul className="mt-3 flex flex-col gap-2">

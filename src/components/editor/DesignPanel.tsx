@@ -130,7 +130,7 @@ export function DesignPanel({
         >
           {FONT_CHOICES.map((font) => (
             <option key={font.id} value={font.id}>
-              {font.name} — {font.description.split(' — ')[1] ?? font.description}
+              {font.name}: {font.description}
             </option>
           ))}
         </SelectField>
@@ -163,7 +163,7 @@ export function DesignPanel({
           description={
             invoice.options.fitToPage
               ? fitScale >= 0.999
-                ? 'Already fits — nothing to shrink.'
+                ? 'Already fits. Nothing to shrink.'
                 : fitScale <= MIN_FIT_SCALE + 0.001
                   ? `Scaled to ${Math.round(fitScale * 100)}%, the smallest size that stays readable. This invoice may still run over.`
                   : `Everything scaled to ${Math.round(fitScale * 100)}% to fit on one page.`

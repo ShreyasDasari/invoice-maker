@@ -44,7 +44,7 @@ const PRIVACY_ANSWER =
 export const SEO_PAGES: readonly SeoPage[] = [
   {
     slug: 'invoice-maker',
-    title: 'Invoice Maker — Make an Invoice Online Free',
+    title: 'Invoice Maker: Make an Invoice Online Free',
     description:
       'Make an invoice online in under two minutes. Fill in your details, watch the preview update, download the PDF. Free, no signup, no watermark.',
     h1: 'Invoice maker',
@@ -57,7 +57,7 @@ export const SEO_PAGES: readonly SeoPage[] = [
         points: [
           'Enter your business name and the customer you are billing.',
           'Add a line per item, with quantity and rate. The amount calculates itself.',
-          'Set tax or a discount if they apply — as a percentage or a flat amount.',
+          'Set tax or a discount if they apply, as a percentage or a flat amount.',
           'Download the PDF, or print it straight from your browser.',
         ],
       },
@@ -96,7 +96,7 @@ export const SEO_PAGES: readonly SeoPage[] = [
   },
   {
     slug: 'free-invoice-maker',
-    title: 'Free Invoice Maker — No Signup, No Watermark',
+    title: 'Free Invoice Maker: No Signup, No Watermark',
     description:
       'A genuinely free invoice maker: no account, no trial, no watermark and no limit on how many invoices you create. Download a professional PDF instantly.',
     h1: 'Free invoice maker',
@@ -119,7 +119,7 @@ export const SEO_PAGES: readonly SeoPage[] = [
       },
       {
         heading: 'Good enough to send to a large client',
-        body: 'Free should not mean it looks free. The three templates are plain, well-aligned documents that print cleanly in black and white and read correctly in any accounting system — the same document you would expect from an established supplier.',
+        body: 'Free should not mean it looks free. The three templates are plain, well-aligned documents that print cleanly in black and white and read correctly in any accounting system. It is the same document you would expect from an established supplier.',
       },
     ],
     faqs: [
@@ -135,7 +135,7 @@ export const SEO_PAGES: readonly SeoPage[] = [
   },
   {
     slug: 'invoice-generator',
-    title: 'Invoice Generator — Instant PDF Invoices',
+    title: 'Invoice Generator: Instant PDF Invoices',
     description:
       'An invoice generator that calculates totals, tax and discounts exactly and hands you a print-ready PDF. Multi-currency, three templates, free.',
     h1: 'Invoice generator',
@@ -144,7 +144,7 @@ export const SEO_PAGES: readonly SeoPage[] = [
     sections: [
       {
         heading: 'Totals you can trust',
-        body: 'Money here is handled as exact decimals, not as floating-point numbers, which is where invoice tools quietly go wrong by a cent. An invoice-level discount is spread across lines so the parts still add up to the whole, and each currency rounds to its own precision — two places for dollars, none for yen, three for dinar.',
+        body: 'Money here is handled as exact decimals, not as floating-point numbers, which is where invoice tools quietly go wrong by a cent. An invoice-level discount is spread across lines so the parts still add up to the whole, and each currency rounds to its own precision: two places for dollars, none for yen, three for dinar.',
       },
       {
         heading: 'Tax the way you actually charge it',
@@ -177,7 +177,7 @@ export const SEO_PAGES: readonly SeoPage[] = [
   },
   {
     slug: 'create-invoice-online',
-    title: 'Create an Invoice Online — Make Your Own Invoice Free',
+    title: 'Create an Invoice Online, Free. Make Your Own Invoice',
     description:
       'Create your own invoice online in a few minutes. Type your details, see the invoice build as you go, download the PDF. Free, no signup, no watermark.',
     h1: 'Create an invoice online',
@@ -224,7 +224,7 @@ export const SEO_PAGES: readonly SeoPage[] = [
   },
   {
     slug: 'create-invoice-online-free-uk',
-    title: 'Create an Invoice Online Free (UK) — Pounds, VAT Ready',
+    title: 'Create an Invoice Online Free (UK): Pounds, VAT Ready',
     description:
       'Create a UK invoice online for free. Pounds sterling by default, UK date format, a VAT line and VAT number when you need them. No signup, no watermark.',
     h1: 'Create an invoice online free, for the UK',
@@ -284,7 +284,7 @@ export const SEO_PAGES: readonly SeoPage[] = [
   },
   {
     slug: 'invoice-template',
-    title: 'Invoice Template — Free, Fill In and Download',
+    title: 'Invoice Template: Free, Fill In and Download',
     description:
       'Three professional invoice templates you fill in online and download as a PDF. Nothing to download first, no spreadsheet formulas to fix.',
     h1: 'Invoice template',
@@ -295,9 +295,9 @@ export const SEO_PAGES: readonly SeoPage[] = [
         heading: 'Three templates, chosen on purpose',
         body: 'Fifty mediocre templates help nobody. These three cover what invoices actually need to look like, and all of them print correctly in black and white.',
         points: [
-          'Classic — a ruled table with clear labels, the layout accounting departments expect.',
-          'Modern — an accent band across the header and a boxed total, for client-facing work.',
-          'Minimal — hairline rules and plenty of whitespace, when the work should speak first.',
+          'Classic: a ruled table with clear labels, the layout accounting departments expect.',
+          'Modern: an accent band across the header and a boxed total, for client-facing work.',
+          'Minimal: hairline rules and plenty of whitespace, when the work should speak first.',
         ],
       },
       {

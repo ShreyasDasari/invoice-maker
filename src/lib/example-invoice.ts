@@ -61,14 +61,14 @@ export function createExampleInvoice(template: TemplateId = 'classic'): Invoice 
     items: [
       createLineItem({
         id: 'ex-1',
-        description: 'Brand identity — logotype, colour and type system',
+        description: 'Brand identity: logotype, colour and type system',
         quantity: '1',
         unitPrice: '3800',
         tax: { mode: 'percent', value: '20', label: 'VAT' },
       }),
       createLineItem({
         id: 'ex-2',
-        description: 'Packaging artwork — six SKUs',
+        description: 'Packaging artwork, six SKUs',
         quantity: '6',
         unitPrice: '240',
         tax: { mode: 'percent', value: '20', label: 'VAT' },

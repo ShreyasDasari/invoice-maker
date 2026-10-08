@@ -194,7 +194,7 @@ export function InvoiceSheet({
 
   /** Invoice number, dates and terms, as a compact definition list. */
   const metaRows: { term: string; value: string }[] = [
-    { term: 'Invoice no.', value: invoice.invoiceNumber || '—' },
+    { term: 'Invoice no.', value: invoice.invoiceNumber || '-' },
     { term: 'Issue date', value: formatDate(invoice.issueDate, dateStyle) },
     { term: 'Due date', value: formatDate(invoice.dueDate, dateStyle) },
   ];
@@ -430,7 +430,7 @@ export function InvoiceSheet({
               {showDiscountColumn ? (
                 <td className="tabular" style={{ ...cell, textAlign: 'right', color: muted }}>
                   {line.discount === ZERO
-                    ? '—'
+                    ? '-'
                     : item.discount.mode === 'percent'
                       ? formatRate(parseDec(item.discount.value))
                       : `-${amountOnly(line.discount)}`}
@@ -439,7 +439,7 @@ export function InvoiceSheet({
               {showTaxColumn ? (
                 <td className="tabular" style={{ ...cell, textAlign: 'right', color: muted }}>
                   {parseDec(item.tax.value) === ZERO
-                    ? '—'
+                    ? '-'
                     : item.tax.mode === 'percent'
                       ? formatRate(parseDec(item.tax.value))
                       : amountOnly(line.tax)}

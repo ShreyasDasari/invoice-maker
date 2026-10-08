@@ -4,7 +4,7 @@
  * The hero.
  *
  * The claim on the left, the finished article on the right. Showing the real
- * invoice is the argument — it answers "what will I actually get" before
+ * invoice is the argument: it answers "what will I actually get" before
  * anyone has typed a character, which is the question a first-time visitor is
  * really asking.
  */
@@ -13,7 +13,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import type { TemplateId } from '@/lib/invoice';
 import { TEMPLATE_LIST } from '@/lib/templates';
-import { ArrowDownIcon, CheckIcon } from '@/components/ui/Icons';
+import { CheckIcon } from '@/components/ui/Icons';
 import { ExampleSheet } from './ExampleSheet';
 import { t } from '@/lib/i18n';
 
@@ -26,12 +26,7 @@ export function LandingHero() {
     <section className="relative overflow-hidden">
       <div className="mx-auto grid max-w-[1400px] items-start gap-10 px-4 py-10 sm:px-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:gap-14 lg:py-16">
         <div className="flex min-w-0 flex-col items-start lg:pt-6">
-          <span className="glass glass-sheen inline-flex items-center gap-2 rounded-full px-3 py-1 text-[12px] font-medium text-ink-muted">
-            <span className="size-1.5 rounded-full bg-success" aria-hidden="true" />
-            Free, and it stays free
-          </span>
-
-          <h1 className="mt-5 text-[34px] font-semibold leading-[1.08] tracking-tight text-ink sm:text-[44px] lg:text-[52px]">
+          <h1 className="text-[34px] font-semibold leading-[1.08] tracking-tight text-ink sm:text-[44px] lg:text-[52px]">
             Make an invoice.
             <br />
             <span className="text-primary">Free.</span>
@@ -50,20 +45,12 @@ export function LandingHero() {
             ))}
           </ul>
 
-          <div className="mt-8 flex flex-wrap items-center gap-3">
-            <Link
-              href="/create"
-              className="inline-flex h-12 items-center rounded-lg bg-primary px-6 text-[15px] font-semibold text-primary-ink shadow-[0_6px_20px_rgb(30_58_95/0.28)] transition-all duration-150 ease-[var(--ease-out-quick)] hover:bg-primary-hover hover:shadow-[0_8px_26px_rgb(30_58_95/0.34)] active:scale-[0.99]"
-            >
-              {t.nav.create}
-            </Link>
-            <Link
-              href="/templates"
-              className="glass inline-flex h-12 items-center rounded-lg px-5 text-[15px] font-medium text-ink transition-colors duration-150 hover:text-primary"
-            >
-              See the templates
-            </Link>
-          </div>
+          <Link
+            href="/create"
+            className="mt-8 inline-flex h-12 items-center rounded-lg bg-primary px-6 text-[15px] font-semibold text-primary-ink shadow-[0_6px_20px_rgb(30_58_95/0.28)] transition-all duration-150 ease-[var(--ease-out-quick)] hover:bg-primary-hover hover:shadow-[0_8px_26px_rgb(30_58_95/0.34)] active:scale-[0.99]"
+          >
+            {t.nav.create}
+          </Link>
 
           <p className="mt-4 text-[12px] text-ink-subtle">
             Built in your browser. Your invoice is never uploaded.
@@ -104,22 +91,12 @@ export function LandingHero() {
           </div>
 
           <p className="mt-3 flex items-center justify-center gap-1.5 text-center text-[12px] text-ink-subtle">
-            A real invoice from this tool — not a mockup.
+            A real invoice from this tool, not a mockup.
             <Link href="/templates" className="inline-flex min-h-11 items-center font-medium text-accent underline-offset-2 hover:underline sm:min-h-0">
               See it in full
             </Link>
           </p>
         </div>
-      </div>
-
-      <div className="flex justify-center pb-8">
-        <a
-          href="#how"
-          className="flex size-11 items-center justify-center rounded-full text-ink-subtle transition-colors hover:text-ink"
-          aria-label="See how it works"
-        >
-          <ArrowDownIcon size={16} />
-        </a>
       </div>
     </section>
   );
