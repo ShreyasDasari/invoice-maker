@@ -177,7 +177,7 @@ export const SEO_PAGES: readonly SeoPage[] = [
   },
   {
     slug: 'create-invoice-online',
-    title: 'Create an Invoice Online — Make Your Own Invoice Free',
+    title: 'Create an Invoice Online, Free. Make Your Own Invoice',
     description:
       'Create your own invoice online in a few minutes. Type your details, see the invoice build as you go, download the PDF. Free, no signup, no watermark.',
     h1: 'Create an invoice online',
@@ -224,7 +224,7 @@ export const SEO_PAGES: readonly SeoPage[] = [
   },
   {
     slug: 'create-invoice-online-free-uk',
-    title: 'Create an Invoice Online Free (UK) — Pounds, VAT Ready',
+    title: 'Create an Invoice Online Free (UK): Pounds, VAT Ready',
     description:
       'Create a UK invoice online for free. Pounds sterling by default, UK date format, a VAT line and VAT number when you need them. No signup, no watermark.',
     h1: 'Create an invoice online free, for the UK',
