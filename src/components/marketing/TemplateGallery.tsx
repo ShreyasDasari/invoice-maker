@@ -107,7 +107,7 @@ export function TemplateGallery() {
                   <span className="min-w-0">
                     <span className="block text-[13px] font-medium text-ink">{choice.name}</span>
                     <span className="block truncate text-[11px] text-ink-subtle">
-                      {choice.description.split(' — ')[1] ?? choice.description}
+                      {choice.description}
                     </span>
                   </span>
                   {selected ? <CheckIcon size={14} className="shrink-0 text-primary" /> : null}

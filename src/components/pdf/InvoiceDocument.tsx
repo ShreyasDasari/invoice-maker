@@ -224,7 +224,7 @@ export function InvoiceDocument({
   })();
 
   const metaRows: { term: string; value: string }[] = [
-    { term: 'Invoice no.', value: invoice.invoiceNumber || '—' },
+    { term: 'Invoice no.', value: invoice.invoiceNumber || '-' },
     { term: 'Issue date', value: formatDate(invoice.issueDate, dateStyle) },
     { term: 'Due date', value: formatDate(invoice.dueDate, dateStyle) },
   ];
@@ -492,7 +492,7 @@ export function InvoiceDocument({
                   {showDiscountColumn ? (
                     <Text style={[s.td, { width: columns.disc, textAlign: 'right', color: MUTED }]}>
                       {line.discount === ZERO
-                        ? '—'
+                        ? '-'
                         : item.discount.mode === 'percent'
                           ? `${formatQuantity(parseDec(item.discount.value))}%`
                           : `-${amountOnly(line.discount)}`}
@@ -501,7 +501,7 @@ export function InvoiceDocument({
                   {showTaxColumn ? (
                     <Text style={[s.td, { width: columns.tax, textAlign: 'right', color: MUTED }]}>
                       {parseDec(item.tax.value) === ZERO
-                        ? '—'
+                        ? '-'
                         : item.tax.mode === 'percent'
                           ? `${formatQuantity(parseDec(item.tax.value))}%`
                           : amountOnly(line.tax)}

@@ -31,14 +31,14 @@ export function CurrencySelect({
       <optgroup label="Common">
         {common.map((currency) => (
           <option key={currency.code} value={currency.code}>
-            {currency.code} — {currency.name}
+            {currency.code}: {currency.name}
           </option>
         ))}
       </optgroup>
       <optgroup label="All currencies">
         {rest.map((currency) => (
           <option key={currency.code} value={currency.code}>
-            {currency.code} — {currency.name}
+            {currency.code}: {currency.name}
           </option>
         ))}
       </optgroup>

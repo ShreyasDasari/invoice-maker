@@ -59,14 +59,14 @@ export function validateInvoice(invoice: Invoice): Issue[] {
     issues.push({
       field: 'business.email',
       level: 'error',
-      message: 'Check this email address — it looks incomplete.',
+      message: 'Check this email address. It looks incomplete.',
     });
   }
   if (!isEmailLike(invoice.customer.email)) {
     issues.push({
       field: 'customer.email',
       level: 'error',
-      message: 'Check this email address — it looks incomplete.',
+      message: 'Check this email address. It looks incomplete.',
     });
   }
 

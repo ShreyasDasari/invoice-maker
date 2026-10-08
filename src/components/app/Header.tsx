@@ -31,7 +31,7 @@ export function Header() {
           // Negative margin plus padding gives the wordmark a 44px tap target
           // on a phone without changing where it sits.
           className="-m-2 flex min-h-11 shrink-0 items-center gap-2 rounded p-2 text-[15px] font-semibold tracking-tight text-ink sm:m-0 sm:min-h-0 sm:p-0"
-          aria-label={`${t.brand} — home`}
+          aria-label={`${t.brand}, home`}
         >
           <span className="grid size-6 place-items-center rounded bg-primary text-primary-ink" aria-hidden="true">
             <FileTextIcon size={14} />
